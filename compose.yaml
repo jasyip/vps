@@ -1,0 +1,74 @@
+version: 3
+
+name: server
+
+services:
+  caddy:
+    build: caddy
+    environment:
+      CROWDSEC_BOUNCER_API_KEY: "$CROWDSEC_BOUNCER_API_KEY"
+    volumes:
+      - caddy_logs:/var/log/caddy
+      - caddy_data:/data
+    ports:
+      - 50080:80
+      - 50443:443
+
+  crowdsec:
+    build: crowdsec
+    restart: unless-stopped
+    depends_on:
+      - caddy
+    environment:
+      COLLECTIONS: >-
+        crowdsecurity/caddy
+      GID: ${GID-1000}
+      BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_API_KEY"
+    expose:
+      - 8080
+    volumes:
+      - caddy_logs:/var/log/caddy:ro
+      - crowdsec_config:/etc/crowdsec
+      - crowdsec_data:/var/lib/crowdsec/data
+
+  # radicale:
+  #   image: tomsquest/docker-radicale
+  #   container_name: radicale
+  #   ports:
+  #     - 5232:5232
+  #   init: true
+  #   read_only: true
+  #   security_opt:
+  #     - no-new-privileges:true
+  #   cap_drop:
+  #     - ALL
+  #   cap_add:
+  #     - SETUID
+  #     - SETGID
+  #     - CHOWN
+  #     - KILL
+  #   healthcheck:
+  #     test: curl -f http://127.0.0.1:5232 || exit 1
+  #     interval: 30s
+  #     retries: 3
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ./data:/data
+
+
+volumes:
+
+  caddy_logs:
+  caddy_data:
+
+  crowdsec_config:
+  crowdsec_data:
+
+  # radicale_data:
+  # nextcloud_db:
+  #   driver: rclone
+  #   driver_opts:
+  #     remote: 'Illinois Box VPS Crypt:nextcloud'
+  #     vfs_cache_mode: full
+  #     allow_other: 'true'
+  #     poll_interval: 0
