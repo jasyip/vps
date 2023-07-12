@@ -1,0 +1,17 @@
+{
+    debug
+    crowdsec {
+        api_url http://crowdsec:8080
+        api_key {$CROWDSEC_BOUNCER_API_KEY}
+        ticker_interval 15s
+        #disable_streaming
+        #enable_hard_fails
+    }
+}
+
+http://localhost {
+    route {
+        crowdsec
+        respond "Allowed by CrowdSec!"
+    }
+}
