@@ -30,16 +30,16 @@ int main(int argc, char *argv[]) {
 
   prog = fs::path(argv[0]).filename();
 
-  if (argc < 1 + 2) {
+  if (argc < 1 + pos_args.size()) {
     argument_error() << "the following arguments are required:";
     for (unsigned i = argc - 1; i < pos_args.size(); ++i)
       cerr << " " << pos_args[i];
     cerr << "\n";
     return 2;
   }
-  if (argc > 1 + 2) {
+  if (argc > 1 + pos_args.size()) {
     argument_error() << "unrecognized arguments:";
-    for (unsigned i = 3; i < argc; ++i) {
+    for (unsigned i = pos_args.size() + 1; i < argc; ++i) {
       cerr << " " << argv[i];
     }
     cerr << "\n";
@@ -72,7 +72,8 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  prog_error() << "directory must be a subdirectory of /mnt\n";
+  prog_error() << "must be a subdirectory of /mnt [" << starting_dir.native()
+               << "]\n";
   return 1;
 valid_directory:
 
@@ -88,7 +89,7 @@ valid_directory:
   }
 
   if (!fs::is_directory(starting_dir)) {
-    prog_error() << "directory must be a subdirectory of /mnt\n";
+    prog_error() << "not a directory [" << starting_dir.native() << "]\n";
     return 1;
   }
 
