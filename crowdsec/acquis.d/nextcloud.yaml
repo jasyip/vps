@@ -1,0 +1,4 @@
+filenames:
+  - /var/www/nextcloud/data/nextcloud.log
+labels
+  types: Nextcloud
