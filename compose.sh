@@ -34,19 +34,19 @@ compose_execute () {
 COMMAND_ARGS="$*"
 ENV_FILE="$XDG_RUNTIME_DIR/compose.env"
 case "$COMMAND" in
-  build)
-    COMMAND_ARGS="--pull"
-    ;;
-  up)
-    if [ "$(compose_execute --podman-args "--all --format json" ps 2>/dev/null | \
-      jq '. | all(.State | in(["dead", "exited"]))')" = "true" ]
-    then
-      CROWDSEC_BOUNCER_API_KEY="$(openssl rand -hex 8)" envsubst \
-        '$CROWDSEC_BOUNCER_API_KEY' < template.env | tee "$ENV_FILE"
-    fi
-    MAIN_ARGS="--env-file $ENV_FILE"
-    COMMAND_ARGS="--build -d --quiet-pull $COMMAND_ARGS"
-    ;;
+build)
+  COMMAND_ARGS="--pull"
+  ;;
+up)
+  if [ "$(compose_execute --podman-args "--all --format json" ps 2>/dev/null |
+    jq '. | all(.State | in(["dead", "exited"]))')" = "true" ]; then
+    # shellcheck disable=SC2016
+    CROWDSEC_BOUNCER_API_KEY="$(openssl rand -hex 8)" envsubst \
+      '$CROWDSEC_BOUNCER_API_KEY' < template.env | tee "$ENV_FILE"
+  fi
+  MAIN_ARGS="--env-file $ENV_FILE"
+  COMMAND_ARGS="--build -d --quiet-pull $COMMAND_ARGS"
+  ;;
 esac
 
 # Start the process
@@ -56,10 +56,12 @@ set -x
 /opt/set-metadata . storage
 
 case "$COMMAND" in
-  logs)
-    compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS 2>&1 | less
-    ;;
-  *)
-    compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS
-    ;;
+logs)
+  # shellcheck disable=SC2086
+  compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS 2>&1 | less
+  ;;
+*)
+  # shellcheck disable=SC2086
+  compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS
+  ;;
 esac
