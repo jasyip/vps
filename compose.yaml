@@ -4,7 +4,10 @@ name: server
 
 services:
   caddy:
-    build: caddy
+    build:
+      context: caddy
+      args:
+        CADDY_VERSION: "$CADDY_VERSION"
     environment:
       CROWDSEC_BOUNCER_API_KEY: "$CROWDSEC_BOUNCER_API_KEY"
     volumes:
@@ -15,14 +18,17 @@ services:
       - 50443:443
 
   crowdsec:
-    build: crowdsec
+    build:
+      context: crowdsec
+      args:
+        CROWDSEC_VERSION: "$CROWDSEC_VERSION"
     restart: unless-stopped
     depends_on:
       - caddy
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
-      GID: ${GID-1000}
+      GID: 1000
       BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_API_KEY"
     expose:
       - 8080

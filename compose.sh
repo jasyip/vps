@@ -42,7 +42,7 @@ up)
     jq '. | all(.State | in(["dead", "exited"]))')" = "true" ]; then
     # shellcheck disable=SC2016
     CROWDSEC_BOUNCER_API_KEY="$(openssl rand -hex 8)" envsubst \
-      '$CROWDSEC_BOUNCER_API_KEY' < template.env | tee "$ENV_FILE"
+      '$CROWDSEC_BOUNCER_API_KEY' < .env | tee "$ENV_FILE"
   fi
   MAIN_ARGS="--env-file $ENV_FILE"
   COMMAND_ARGS="--build -d --quiet-pull $COMMAND_ARGS"
