@@ -23,8 +23,6 @@ services:
       args:
         CROWDSEC_VERSION: "$CROWDSEC_VERSION"
     restart: unless-stopped
-    depends_on:
-      - caddy
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
