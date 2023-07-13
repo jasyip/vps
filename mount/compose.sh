@@ -53,7 +53,7 @@ esac
 
 set -x
 
-/opt/set-metadata . storage
+/opt/set-metadata . server
 
 case "$COMMAND" in
 logs)
