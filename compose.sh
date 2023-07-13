@@ -45,7 +45,7 @@ up)
       '$CROWDSEC_BOUNCER_API_KEY' < .env | tee "$ENV_FILE"
   fi
   MAIN_ARGS="--env-file $ENV_FILE"
-  COMMAND_ARGS="--build -d --quiet-pull $COMMAND_ARGS"
+  COMMAND_ARGS="-d $COMMAND_ARGS"
   ;;
 esac
 
