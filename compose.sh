@@ -58,10 +58,10 @@ set -x
 case "$COMMAND" in
 logs)
   # shellcheck disable=SC2086
-  compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS 2>&1 | less
+  compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS "$@" 2>&1 | less
   ;;
 *)
   # shellcheck disable=SC2086
-  compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS
+  compose_execute $MAIN_ARGS "$COMMAND" $COMMAND_ARGS "$@"
   ;;
 esac
