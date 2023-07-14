@@ -4,11 +4,11 @@ import sys
 
 sys.dont_write_bytecode = True
 
+import logging
 import os
 import re
 import shutil
 import subprocess
-import logging
 from argparse import ArgumentParser
 from collections import namedtuple
 from collections.abc import Iterable
@@ -20,13 +20,15 @@ _logger: Final = logging.getLogger(__name__)
 
 PathLike: Final[TypeAlias] = os.PathLike | str
 
+
 def _disable_cow(dest: PathLike) -> bool:
     dest = Path(dest)
     if not dest.exists():
         dest.touch()
-        process = subprocess.run(("chattr", "+C", str(dest)))
+        process: Final = subprocess.run(("chattr", "+C", str(dest)))
         return process.returncode == 0
     return False
+
 
 def _merge_snapshot(
     source: PathLike, dest: PathLike, *, source_fmt: str = "qcow2", dest_fmt: str
@@ -34,15 +36,15 @@ def _merge_snapshot(
     _disable_cow(dest)
 
     process_args: tuple[str, ...] = (
-            "qemu-img",
-            "convert",
-            "-f",
-            source_fmt,
-            "-O",
-            dest_fmt,
-            str(source),
-            str(dest),
-        )
+        "qemu-img",
+        "convert",
+        "-f",
+        source_fmt,
+        "-O",
+        dest_fmt,
+        str(source),
+        str(dest),
+    )
     _logger.debug(f"{process_args=}")
     subprocess.run(
         process_args,
@@ -54,14 +56,14 @@ def _create_snapshot(source: PathLike, dest: PathLike, source_fmt: str = "raw") 
     _disable_cow(dest)
 
     process_args: tuple[str, ...] = (
-            "qemu-img",
-            "create",
-            "-o",
-            f"backing_file={source},backing_fmt={source_fmt}",
-            "-f",
-            "qcow2",
-            str(dest),
-        )
+        "qemu-img",
+        "create",
+        "-o",
+        f"backing_file={source},backing_fmt={source_fmt}",
+        "-f",
+        "qcow2",
+        str(dest),
+    )
     _logger.debug(f"{process_args=}")
     subprocess.run(
         process_args,
@@ -147,7 +149,9 @@ def merge_snapshots(backing: PathLike, **kwargs) -> Optional[Path]:
         raise ValueError("Nothing to merge")
     merge_output_path: Path = backing
     while True:
-        merge_output_path = merge_output_path.with_suffix(merge_output_path.suffix + "~")
+        merge_output_path = merge_output_path.with_suffix(
+            merge_output_path.suffix + "~"
+        )
         if not merge_output_path.exists():
             break
 
@@ -178,7 +182,6 @@ if __name__ == "__main__":
     merge_parser.add_argument("-o", "--overwrite", action="store_true")
     merge_parser.add_argument("backing", metavar="backing_file", type=Path)
     merge_parser.set_defaults(func=merge_snapshots)
-
 
     args: Final = parser.parse_args()
 
