@@ -9,9 +9,9 @@
     }
 }
 
-http://localhost {
-    route {
-        crowdsec
-        respond "Allowed by CrowdSec!"
-    }
+* {
+  route {
+    crowdsec
+    file_server
+  }
 }

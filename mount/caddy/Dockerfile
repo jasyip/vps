@@ -12,10 +12,7 @@ FROM caddy:${CADDY_VERSION}-alpine
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 
-EXPOSE 80
-EXPOSE 443
-
 VOLUME /data
 
 COPY Caddyfile /etc/caddy/
-# COPY data/ /srv
+COPY site/ /srv/
