@@ -1,63 +1,52 @@
 #!/usr/bin/python
 
-import sys
 
-sys.dont_write_bytecode = True
-
+import decimal
 import logging
+import os
+import subprocess
+import sys
+from argparse import ArgumentParser
+from decimal import Decimal
+from itertools import chain
+from numbers import Real
+from pathlib import Path
+from pprint import pformat
+from signal import raise_signal
 from typing import Final
 
 _logger: Final = logging.getLogger(__name__)
 
-from pathlib import Path
-
 ROOT_DIR: Path = Path(__file__).parent
-sys.path.append(str(ROOT_DIR))
-if ROOT_DIR.is_relative_to(Path.cwd()):
-    ROOT_DIR = ROOT_DIR.relative_to(Path.cwd())
+sys.path.insert(0, str(ROOT_DIR))
 
-import os
-import platform
-from numbers import Real
-from typing import Iterable
+import config
 
-from argparse import ArgumentParser
-from snapshot import latest_snapshot
-from utils import *
 
-MEMORY_RATIO: Final[Real | float] = 0.25
+def mount_options(flag: str, *args, **kwargs) -> tuple[str, str]:
+    for path_transform_key in ("path", "file"):
+        if path_transform_key in kwargs:
+            as_path = Path(kwargs[path_transform_key])
+            if not as_path.is_absolute() and not as_path.is_relative_to(ROOT_DIR):
+                as_path = ROOT_DIR / as_path
+            kwargs[path_transform_key] = as_path
 
-def base_command(backing_img) -> Iterable[tuple[str, ...]]:
-    MOUNTS: Final[Iterable[tuple[str, str]]] = (
-        # fmt: off
-        # mount_options("drive", media="cdrom", readonly="on", file="cd_image.iso"),
-        mount_options("virtfs", "local", path="mount", mount_tag="docker", security_model="mapped-xattr"),
-        # fmt: on
+    return (
+        f"-{flag}",
+        ",".join(args + tuple(f"{k}={v}" for k, v in kwargs.items())),
     )
 
-    # fmt: off
-    return [
-        (f"qemu-system-{platform.machine()}",),
-        ( "-accel",    "kvm",),
-        ( "-machine",  "q35",),
-        ( "-device",   "intel-iommu",),
-        ( "-cpu",      "host,hv_relaxed,hv_spinlocks=0x1fff,hv_vapic,hv_time",),
-        ( "-smp",       str(os.cpu_count()),),
-        ( "-m",         str(memory_ratio(MEMORY_RATIO)) + "G",),
-        ( "-boot",     "menu=on",),
-        ( "-nic",      "user,model=virtio-net-pci",),
-        ( "-drive",    "if=pflash,format=raw,readonly=on,file=/usr/share/edk2-ovmf/x64/OVMF_CODE.fd",),
-        ( "-drive",    "if=pflash,format=raw,file=OVMF_VARS.fd",),
-        ( "-drive",   f"file={latest_snapshot(backing_img)},format=qcow2,if=virtio,aio=native,cache.direct=on",),
-        *MOUNTS,
-    ]
-    # fmt: on
 
+def memory_ratio(ratio: Real | float) -> Decimal:
+    return (
+        Decimal(ratio)  # type: ignore[arg-type]
+        * os.sysconf("SC_PAGE_SIZE")
+        * os.sysconf("SC_PHYS_PAGES")
+        / 1024
+        / 1024
+        / 1024
+    ).quantize(Decimal(".01"), rounding=decimal.ROUND_UP)
 
-import subprocess
-from itertools import chain
-from pprint import pformat
-from signal import raise_signal
 
 if __name__ == "__main__":
     parser = ArgumentParser()
@@ -68,7 +57,7 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG if main_args.debug else logging.INFO)
 
     _logger.debug(f"{qemu_args=}")
-    command_list: list[tuple[str, ...]] = list(base_command(main_args.image))
+    command_list: list[tuple[str, ...]] = list(config.command(main_args.image))
     command_list.append(tuple(qemu_args))
     _logger.info(f"{pformat(command_list)=!s}")
 
