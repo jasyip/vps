@@ -4,7 +4,6 @@
 import decimal
 import logging
 import os
-import re
 import sys
 from argparse import ArgumentParser
 from decimal import Decimal
@@ -25,14 +24,19 @@ import config
 def mount_options(flag: str, *args) -> tuple[str, ...]:
     args = list(args)  # type: ignore[assignment]
     if args and "," in args[-1]:
-        kwpairs: Final[list[str]] = re.split(r"\s*,\s*", args[-1])
+
+        kwpairs: Final[list[str]] = args[-1].split(",")
         for i, pair in enumerate(kwpairs):
             key, separator, value = pair.partition("=")
+            key = key.strip()
+            value = value.strip()
+
             if separator and key in {"path", "file"}:
                 as_path = Path(value)
                 if not as_path.is_absolute() and not as_path.is_relative_to(ROOT_DIR):
                     as_path = ROOT_DIR / as_path
                 kwpairs[i] = f"{key}={as_path}"
+
         args[-1] = ",".join(kwpairs)  # type: ignore[index]
 
     return ("-" + flag, *args)
