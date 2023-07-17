@@ -1,3 +1,12 @@
 #!/bin/sh
 
-cp /usr/share/ovmf/x64/OVMF_VARS.fd .
+set -e
+
+FILE="OVMF_VARS.fd"
+
+if [ -f "$FILE" ]; then
+  rm "$FILE"
+fi
+touch "$FILE"
+chattr +C "$FILE"
+cp "/usr/share/ovmf/x64/$FILE" .
