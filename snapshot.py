@@ -19,6 +19,7 @@ from typing import Final, Optional, TypeAlias
 _logger: Final = logging.getLogger(__name__)
 
 PathLike: Final[TypeAlias] = os.PathLike | str
+QEMU_IMG: Final[str] = "/usr/bin/qemu-img"
 
 
 def _disable_cow(dest: PathLike) -> bool:
@@ -30,13 +31,17 @@ def _disable_cow(dest: PathLike) -> bool:
     return False
 
 
+def _qemu_img(args):
+    _logger.debug(f"{args=}")
+    return subprocess.run((QEMU_IMG, *args), check=True)
+
+
 def _merge_snapshot(
     source: PathLike, dest: PathLike, *, source_fmt: str = "qcow2", dest_fmt: str
 ) -> None:
     _disable_cow(dest)
 
-    process_args: tuple[str, ...] = (
-        "qemu-img",
+    process_args: Final[tuple[str, ...]] = (
         "convert",
         "-f",
         source_fmt,
@@ -45,18 +50,13 @@ def _merge_snapshot(
         str(source),
         str(dest),
     )
-    _logger.debug(f"{process_args=}")
-    subprocess.run(
-        process_args,
-        check=True,
-    )
+    _qemu_img(process_args)
 
 
 def _create_snapshot(source: PathLike, dest: PathLike, source_fmt: str = "raw") -> None:
     _disable_cow(dest)
 
-    process_args: tuple[str, ...] = (
-        "qemu-img",
+    process_args: Final[tuple[str, ...]] = (
         "create",
         "-o",
         f"backing_file={source},backing_fmt={source_fmt}",
@@ -64,11 +64,7 @@ def _create_snapshot(source: PathLike, dest: PathLike, source_fmt: str = "raw") 
         "qcow2",
         str(dest),
     )
-    _logger.debug(f"{process_args=}")
-    subprocess.run(
-        process_args,
-        check=True,
-    )
+    _qemu_img(process_args)
 
 
 @total_ordering
