@@ -164,6 +164,5 @@ cython_debug/
 /*.img
 /*.raw
 /OVMF_VARS.fd
-/cd_image.iso
 
 /mount/caddy/site/*
