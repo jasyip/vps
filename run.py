@@ -55,16 +55,17 @@ if __name__ == "__main__":
     parser.add_argument("image", type=Path)
     main_args, qemu_args = parser.parse_known_args()
 
-    logging.basicConfig(level=logging.DEBUG if main_args.debug else logging.INFO)
+    logging.basicConfig(
+        stream=sys.stderr, level=logging.DEBUG if main_args.debug else logging.INFO
+    )
 
     _logger.debug(f"{qemu_args=}")
     command_list: list[tuple[str, ...]] = list(config.command(main_args.image))
     command_list.append(tuple(qemu_args))
     _logger.info(f"{pformat(command_list)=!s}")
 
-    return_code: Final[int] = subprocess.run(chain.from_iterable(command_list)).returncode  # type: ignore[call-overload]
-    _logger.debug(f"{return_code=}")
-    if return_code < 0:
-        raise_signal(-return_code)
-    else:
-        sys.exit(return_code)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    final_command: Final[tuple[str, ...]] = tuple(chain.from_iterable(command_list))
+    _logger.debug(f"{final_command=}")
+    os.execv(final_command[0], final_command)
