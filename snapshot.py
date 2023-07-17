@@ -1,14 +1,11 @@
 #!/usr/bin/env python
 
-import sys
-
-sys.dont_write_bytecode = True
-
 import logging
 import os
 import re
 import shutil
 import subprocess
+import sys
 from argparse import ArgumentParser
 from collections import namedtuple
 from collections.abc import Iterable
@@ -26,7 +23,9 @@ def _disable_cow(dest: PathLike) -> bool:
     dest = Path(dest)
     if not dest.exists():
         dest.touch()
-        process: Final = subprocess.run(("chattr", "+C", str(dest)))
+        process: Final = subprocess.run(
+            ("/usr/bin/chattr", "+C", str(dest)), check=True
+        )
         return process.returncode == 0
     return False
 
@@ -181,7 +180,9 @@ if __name__ == "__main__":
 
     args: Final = parser.parse_args()
 
-    logging.basicConfig(level=logging.DEBUG if args.debug else logging.INFO)
+    logging.basicConfig(
+        stream=sys.stderr, level=logging.DEBUG if args.debug else logging.INFO
+    )
 
     output: Optional[Path] = args.func(**vars(args))
     if output is None:
