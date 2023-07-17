@@ -64,8 +64,8 @@ if __name__ == "__main__":
     command_list.append(tuple(qemu_args))
     _logger.info(f"{pformat(command_list)=!s}")
 
-    sys.stdout.flush()
-    sys.stderr.flush()
     final_command: Final[tuple[str, ...]] = tuple(chain.from_iterable(command_list))
     _logger.debug(f"{final_command=}")
+    sys.stdout.flush()
+    sys.stderr.flush()
     os.execv(final_command[0], final_command)
