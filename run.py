@@ -4,7 +4,7 @@
 import decimal
 import logging
 import os
-import subprocess
+import re
 import sys
 from argparse import ArgumentParser
 from decimal import Decimal
@@ -12,7 +12,6 @@ from itertools import chain
 from numbers import Real
 from pathlib import Path
 from pprint import pformat
-from signal import raise_signal
 from typing import Final
 
 _logger: Final = logging.getLogger(__name__)
@@ -23,18 +22,20 @@ sys.path.insert(0, str(ROOT_DIR))
 import config
 
 
-def mount_options(flag: str, *args, **kwargs) -> tuple[str, str]:
-    for path_transform_key in ("path", "file"):
-        if path_transform_key in kwargs:
-            as_path = Path(kwargs[path_transform_key])
-            if not as_path.is_absolute() and not as_path.is_relative_to(ROOT_DIR):
-                as_path = ROOT_DIR / as_path
-            kwargs[path_transform_key] = as_path
+def mount_options(flag: str, *args) -> tuple[str, ...]:
+    args = list(args)  # type: ignore[assignment]
+    if args and "," in args[-1]:
+        kwpairs: Final[list[str]] = re.split(r"\s*,\s*", args[-1])
+        for i, pair in enumerate(kwpairs):
+            key, separator, value = pair.partition("=")
+            if separator and key in {"path", "file"}:
+                as_path = Path(value)
+                if not as_path.is_absolute() and not as_path.is_relative_to(ROOT_DIR):
+                    as_path = ROOT_DIR / as_path
+                kwpairs[i] = f"{key}={as_path}"
+        args[-1] = ",".join(kwpairs)  # type: ignore[index]
 
-    return (
-        f"-{flag}",
-        ",".join(args + tuple(f"{k}={v}" for k, v in kwargs.items())),
-    )
+    return ("-" + flag, *args)
 
 
 def memory_ratio(ratio: Real | float) -> Decimal:
