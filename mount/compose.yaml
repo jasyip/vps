@@ -36,10 +36,14 @@ services:
       - crowdsec_data:/var/lib/crowdsec/data
 
   # radicale:
-  #   image: tomsquest/docker-radicale
-  #   container_name: radicale
-  #   ports:
-  #     - 5232:5232
+  #   build:
+  #     context: radicale
+  #     args:
+  #       RADICALE_VERSION: "$RADICALE_VERSION"
+  #   environment:
+  #     TAKE_FILE_OWNERSHIP: false
+  #   expose:
+  #     - 5232
   #   init: true
   #   read_only: true
   #   security_opt:
@@ -52,12 +56,27 @@ services:
   #     - CHOWN
   #     - KILL
   #   healthcheck:
-  #     test: curl -f http://127.0.0.1:5232 || exit 1
+  #     test: curl -o /dev/null -f http://127.0.0.1:5232 || exit
   #     interval: 30s
   #     retries: 3
-  #   restart: unless-stopped
   #   volumes:
-  #     - ./data:/data
+  #     - radicale_data:/data
+
+  # ejabberd:
+  #   build:
+  #     context: ejabberd
+  #     args:
+  #       EJABBERD_VERSION: "$EJABBERD_VERSION"
+  #   expose:
+  #     - 5222
+  #     - 5269
+  #     - 5280
+  #     - 5443
+  #     - 1883
+  #   volumes:
+  #     - ejabberd_data:/home/ejabberd/database
+  #     - ejabberd_logs:/home/ejabberd/logs
+  #     - ejabberd_uploads:/home/ejabberd/upload
 
 
 volumes:
@@ -69,10 +88,7 @@ volumes:
   crowdsec_data:
 
   # radicale_data:
-  # nextcloud_db:
-  #   driver: rclone
-  #   driver_opts:
-  #     remote: 'Illinois Box VPS Crypt:nextcloud'
-  #     vfs_cache_mode: full
-  #     allow_other: 'true'
-  #     poll_interval: 0
+
+  # ejabberd_data:
+  # ejabberd_logs:
+  # ejabberd_uploads:
