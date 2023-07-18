@@ -13,5 +13,8 @@
   route {
     crowdsec
     file_server
+    log {
+      output file /var/log/caddy/access.log
+    }
   }
 }
