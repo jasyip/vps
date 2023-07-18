@@ -1,6 +1,4 @@
 services:
-  caddy:
-    restart: on-failure
   crowdsec:
     ports:
       - 6060:6060
