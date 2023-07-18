@@ -1,0 +1,4 @@
+source: file
+file: /var/log/messages
+labels:
+  types: syslog
