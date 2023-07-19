@@ -12,33 +12,52 @@
 
 namespace fs = std::filesystem;
 using std::cerr;
+using namespace std::string_literals;
 
 static std::optional<std::string> prog;
-std::ostream &prog_error() { return cerr << *prog << ": error: "; }
-
 constexpr std::array pos_args = {"MOUNT", "GROUP"};
-std::ostream &argument_error() {
-  cerr << "usage: " << *prog;
+
+void prog_error() { cerr << *prog << ": error: "; }
+
+void prog_usage() {
+  cerr << "usage: " << *prog << " [-h|--help]";
   for (const auto &arg : pos_args) {
     cerr << " " << arg;
   }
   cerr << "\n";
-  return prog_error();
 }
 
 int main(int argc, char *argv[]) {
 
   prog = fs::path(argv[0]).filename();
 
+  for (unsigned i = 1; i < argc; ++i) {
+    if (argv[i] == "-h"s || argv[i] == "--help"s) {
+      prog_usage();
+      cerr << "\n"
+           << "positional arguments:\n"
+           << "  MOUNT        mount directory\n"
+           << "  GROUP        group name to set files to\n"
+           << "\n"
+           << "options:\n"
+           << "  -h, --help   show this help message and exit\n";
+      return 0;
+    }
+  }
+
   if (argc < 1 + pos_args.size()) {
-    argument_error() << "the following arguments are required:";
+    prog_usage();
+    prog_error();
+    cerr << "the following arguments are required:";
     for (unsigned i = argc - 1; i < pos_args.size(); ++i)
       cerr << " " << pos_args[i];
     cerr << "\n";
     return 2;
   }
   if (argc > 1 + pos_args.size()) {
-    argument_error() << "unrecognized arguments:";
+    prog_usage();
+    prog_error();
+    cerr << "unrecognized arguments:";
     for (unsigned i = pos_args.size() + 1; i < argc; ++i) {
       cerr << " " << argv[i];
     }
@@ -72,8 +91,8 @@ int main(int argc, char *argv[]) {
       }
     }
   }
-  prog_error() << "must be a subdirectory of /mnt [" << starting_dir.native()
-               << "]\n";
+  prog_error();
+  cerr << "must be a subdirectory of /mnt [" << starting_dir.native() << "]\n";
   return 1;
 valid_directory:
 
@@ -82,14 +101,16 @@ valid_directory:
   {
     struct group const *const group = getgrnam(argv[2]);
     if (!group) {
-      prog_error() << "nonexistent group [" << argv[2] << "]\n";
+      prog_error();
+      cerr << "nonexistent group [" << argv[2] << "]\n";
       return 1;
     }
     gid = group->gr_gid;
   }
 
   if (!fs::is_directory(starting_dir)) {
-    prog_error() << "not a directory [" << starting_dir.native() << "]\n";
+    prog_error();
+    cerr << "not a directory [" << starting_dir.native() << "]\n";
     return 1;
   }
 
@@ -105,7 +126,7 @@ valid_directory:
     if (static_cast<bool>(perms & fs::perms::owner_read))
       perms |= fs::perms::group_read;
     if (static_cast<bool>(perms & fs::perms::owner_exec))
-      perms |= fs::perms::group_exec;
+      perms |= fs::perms::group_exec | fs::perms::others_exec;
 
     if (perms != original_perms)
       fs::permissions(starting_dir, perms);
@@ -115,10 +136,8 @@ valid_directory:
              starting_dir, fs::directory_options::skip_permission_denied);
          it != fs::recursive_directory_iterator(); ++it) {
 
-      if (it->is_symlink()) {
-        it.disable_recursion_pending();
+      if (it->is_symlink())
         continue;
-      }
 
       fs::path const &path = it->path(), filename = path.filename();
 
@@ -136,16 +155,23 @@ valid_directory:
         if (it->is_regular_file() && filename.extension() == ".sh")
           perms |= fs::perms::owner_exec;
 
-        if (static_cast<bool>(perms & fs::perms::owner_read))
+        if (static_cast<bool>(perms & fs::perms::owner_read)) {
           perms |= fs::perms::group_read;
+          fs::path const relative_path = path.lexically_relative(starting_dir);
+          if (std::distance(relative_path.begin(), relative_path.end()) > 1 &&
+              it->is_regular_file()) {
+            perms |= fs::perms::others_read;
+          }
+        }
         if (static_cast<bool>(perms & fs::perms::owner_exec))
-          perms |= fs::perms::group_exec;
+          perms |= fs::perms::group_exec | fs::perms::others_exec;
       }
       if (perms != original_perms)
         fs::permissions(path, perms);
     }
   } catch (fs::filesystem_error const &e) {
-    prog_error() << e.what() << "\n";
+    prog_error();
+    cerr << e.what() << "\n";
     return 1;
   }
 }
