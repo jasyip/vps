@@ -2,19 +2,15 @@ import sys
 
 sys.dont_write_bytecode = True
 
-import json
 import logging
 import os
 import re
-import secrets
 import shlex
 import signal
 import subprocess
-import time
 from argparse import ArgumentParser
 from collections.abc import Iterable
 from pathlib import Path, PurePath
-from string import Template
 from typing import Final, Optional
 
 COMPOSE: Final[str] = "podman-compose"
@@ -80,38 +76,6 @@ match subcommand:
         subcommand_args.append("--pull")
 
     case "up":
-        tmp_dir: Path
-        if "XDG_RUNTIME_DIR" in os.environ:
-            tmp_dir = Path(os.environ["XDG_RUNTIME_DIR"])
-        elif "XDG_STATE_HOME" in os.environ:
-            tmp_dir = Path(os.environ["XDG_STATE_HOME"], "tmp")
-            tmp_dir.mkdir(exist_ok=True)
-        else:
-            tmp_dir = Path("~", ".local", "state", "tmp")
-            tmp_dir.mkdir(parents=True, exist_ok=True)
-        env_file: Final[Path] = tmp_dir / "compose.env"
-        _logger.debug(f"{env_file=}")
-
-        ps_proc: Final = subprocess.run(
-            command(("--podman-args", "--all --format json", "ps")),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            check=True,
-            text=True,
-        )
-        ps_json_output: Final = json.loads(ps_proc.stdout)
-        if all(
-            container["State"] in {"dead", "exited"} for container in ps_json_output
-        ):
-            _logger.debug("Generating environment file from template")
-            env_template: Final = Template(Path(".env").read_text())
-            env_file.write_text(
-                env_template.safe_substitute(
-                    CROWDSEC_BOUNCER_API_KEY=secrets.token_hex(16 // 2)
-                )
-            )
-
-        main_args.extend(("--env-file", str(env_file)))
         subcommand_args.append("-d")
 
 _logger.debug(f"default main_args based on subcommand: {main_args}")
