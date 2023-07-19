@@ -1,4 +1,4 @@
 source: file
-file: /var/log/messages
+filename: /var/log/host/messages
 labels:
   types: syslog
