@@ -16,6 +16,11 @@ services:
     ports:
       - 50080:80
       - 50443:443
+    depends_on:
+      crowdsec:
+        restart: false
+        condition: service_healthy
+        required: false
 
   crowdsec:
     build:
@@ -34,6 +39,9 @@ services:
       - /var/log/messages:/var/log/host/messages:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
+    init: true
+    healthcheck:
+      test: wget -q --spider localhost:8080/health
 
   # radicale:
   #   build:
