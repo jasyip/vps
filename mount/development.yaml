@@ -1,4 +1,8 @@
 services:
+  caddy:
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/site:/srv:ro
   crowdsec:
     ports:
       - 127.0.0.1:6060:6060
