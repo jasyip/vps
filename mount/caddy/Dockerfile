@@ -5,7 +5,7 @@ RUN xcaddy build \
     --with github.com/hslatman/caddy-crowdsec-bouncer@v0.2.0 \
     && go clean -x -cache -modcache
 
-ARG CADDY_VERSION=2
+ARG CADDY_VERSION
 FROM caddy:${CADDY_VERSION}-alpine
 # Just copy the config files, no need for volume!
 # VOLUME /config

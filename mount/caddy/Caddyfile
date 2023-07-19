@@ -4,17 +4,17 @@
         api_url http://crowdsec:8080
         api_key "{$CROWDSEC_BOUNCER_API_KEY}"
         ticker_interval 15s
-        #disable_streaming
-        #enable_hard_fails
+        # disable_streaming
+        # enable_hard_fails
     }
 }
 
 * {
+  log {
+    output file /var/log/caddy/access.log
+  }
   route {
     crowdsec
     file_server
-    log {
-      output file /var/log/caddy/access.log
-    }
   }
 }
