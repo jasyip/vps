@@ -188,4 +188,4 @@ if __name__ == "__main__":
     if output is None:
         _logger.info("Done!")
     else:
-        _logger.info(f"New file: '{output}'")
+        _logger.info(f"New raw image: '{output}'")

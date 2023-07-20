@@ -15,7 +15,8 @@ from typing import Final, Optional
 
 COMPOSE: Final[str] = "podman-compose"
 SET_METADATA_CMD: Final[tuple[str, ...]] = ("/opt/set-metadata", ".", "server")
-main_args: Final[list[str]] = ["-f", "compose.yaml"]
+LOCAL_ENV: Final[str] = ".local.env"
+main_args: Final[list[str]] = ["-f", "compose.yaml", "--env-file", ".env"]
 subcommand_args: Final[list[str]] = []
 
 own_parser: Final = ArgumentParser()
@@ -24,7 +25,7 @@ own_parser.add_argument(
     "--less-opts",
     default="",
     type=shlex.split,
-    help="options to pass to 'less', which may be invoked depending on provided podman-compose subcommand",
+    help=f"options to pass to 'less', which may be invoked depending on provided {COMPOSE} subcommand",
 )
 
 _logger: Final = logging.getLogger(__name__)
@@ -56,6 +57,11 @@ _logger.debug(f"Initial {main_args=}")
 _logger.debug(f"Initial {subcommand_args=}")
 
 os.chdir(PurePath(__file__).parent)
+
+if Path(LOCAL_ENV).is_file():
+    _logger.debug(f"Found '{LOCAL_ENV}'")
+    main_args.extend(("--env-file", LOCAL_ENV))
+    _logger.debug(f"{main_args=}")
 
 subcommand: Final[str] = sys.argv[_subcommand_ind]
 _logger.debug(f"{subcommand=}")
