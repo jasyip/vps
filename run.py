@@ -56,15 +56,24 @@ def memory_ratio(ratio: Real | float) -> Decimal:
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("-d", "--debug", action="store_true")
-    parser.add_argument("image", type=Path)
+    parser.add_argument("base_image", nargs='?', type=lambda x: x if x is None else Path(x))
     main_args, qemu_args = parser.parse_known_args()
 
     logging.basicConfig(
         stream=sys.stderr, level=logging.DEBUG if main_args.debug else logging.INFO
     )
 
+    if main_args.base_image is None:
+        raw_images: Final[set[Path]] = set()
+        for child in ROOT_DIR.iterdir():
+            if child.suffix.removeprefix(".") in {"raw", "img"}:
+                raw_images.add(child)
+        if len(raw_images) != 1:
+            parser.error("cannot unambiguously assume base image, please provide")
+        main_args.base_image = next(iter(raw_images))
+
     _logger.debug(f"{qemu_args=}")
-    command_list: list[tuple[str, ...]] = list(config.command(main_args.image))
+    command_list: list[tuple[str, ...]] = list(config.command(main_args.base_image))
     command_list.append(tuple(qemu_args))
     _logger.info(f"{pformat(command_list)=!s}")
 
