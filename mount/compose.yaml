@@ -12,6 +12,8 @@ services:
       context: caddy
       args:
         CADDY_VERSION: "$CADDY_VERSION"
+      tags:
+        - "server_caddy:${CADDY_VERSION}"
     environment:
       CROWDSEC_BOUNCER_API_KEY: "$CROWDSEC_BOUNCER_API_KEY"
     volumes:
@@ -32,6 +34,8 @@ services:
       context: crowdsec
       args:
         CROWDSEC_VERSION: "$CROWDSEC_VERSION"
+      tags:
+        - "server_crowdsec:${CROWDSEC_VERSION}"
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
