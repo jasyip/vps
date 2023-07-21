@@ -4,7 +4,7 @@ FROM caddy:${CADDY_VERSION}-builder-alpine AS builder
 ARG CADDY_VERSION
 RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod \
-    XCADDY_SKIP_CLEANUP=0 xcaddy build \
+    XCADDY_SKIP_CLEANUP=0 XCADDY_SUDO=0 xcaddy build \
     --with github.com/hslatman/caddy-crowdsec-bouncer@v0.2.0
 
 FROM caddy:${CADDY_VERSION}-alpine
