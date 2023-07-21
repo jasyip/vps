@@ -2,8 +2,12 @@ version: 3
 
 name: server
 
+x-restart: &restart
+  {}
+
 services:
   caddy:
+    <<: *restart
     build:
       context: caddy
       args:
@@ -23,6 +27,7 @@ services:
         required: false
 
   crowdsec:
+    <<: *restart
     build:
       context: crowdsec
       args:

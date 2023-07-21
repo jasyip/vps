@@ -1,7 +1,2 @@
-services:
-  caddy:
-    restart: unless-stopped
-  crowdsec:
-    restart: unless-stopped
-  # radicale:
-  #   restart: unless-stopped
+x-restart: &restart
+  restart: unless-stopped
