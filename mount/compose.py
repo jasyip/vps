@@ -14,8 +14,7 @@ from typing import Final, Optional
 
 COMPOSE: Final[str] = "podman-compose"
 SET_METADATA_CMD: Final[tuple[str, ...]] = ("/opt/set-metadata", ".", "server")
-LOCAL_ENV: Final[str] = ".local.env"
-main_args: Final[list[str]] = ["-f", "compose.yaml", "--env-file", ".env"]
+main_args: Final[list[str]] = ["-f", "compose.yaml"]
 subcommand_args: Final[list[str]] = []
 
 own_parser: Final = ArgumentParser()
@@ -56,11 +55,6 @@ _logger.debug(f"Initial {main_args=}")
 _logger.debug(f"Initial {subcommand_args=}")
 
 os.chdir(PurePath(__file__).parent)
-
-if Path(LOCAL_ENV).is_file():
-    _logger.debug(f"Found '{LOCAL_ENV}'")
-    main_args.extend(("--env-file", LOCAL_ENV))
-    _logger.debug(f"{main_args=}")
 
 subcommand: Final[str] = sys.argv[_subcommand_ind]
 _logger.debug(f"{subcommand=}")

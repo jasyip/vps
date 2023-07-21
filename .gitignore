@@ -120,7 +120,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
-/.env
+.env
 .venv
 env/
 venv/
@@ -166,4 +166,3 @@ cython_debug/
 /OVMF_VARS.fd
 
 /mount/caddy/site/*
-/mount/.local.env
