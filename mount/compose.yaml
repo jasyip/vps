@@ -19,6 +19,7 @@ services:
     volumes:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data
+      - caddy_pseudo_config:/config
     ports:
       - 50080:80
       - 50443:443
@@ -27,6 +28,13 @@ services:
         restart: false
         condition: service_healthy
         required: false
+    # read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
 
   crowdsec:
     <<: *restart
@@ -39,8 +47,8 @@ services:
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
-      GID: 1000
       BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_API_KEY"
+      GID: 1000
     expose:
       - 8080
     volumes:
@@ -51,6 +59,14 @@ services:
     init: true
     healthcheck:
       test: wget -q --spider localhost:8080/health
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - NET_BIND_SERVICE
 
   # radicale:
   #   build:
@@ -100,6 +116,7 @@ volumes:
 
   caddy_logs:
   caddy_data:
+  caddy_pseudo_config:
 
   crowdsec_config:
   crowdsec_data:
