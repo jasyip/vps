@@ -6,7 +6,6 @@ import logging
 import os
 import re
 import shlex
-import signal
 import subprocess
 from argparse import ArgumentParser
 from collections.abc import Iterable
@@ -98,40 +97,18 @@ subprocess.run(SET_METADATA_CMD, check=True)
 
 final_command: Final[tuple[str, ...]] = command()
 _logger.info(f"Executing: {final_command}")
+
 match subcommand:
     case "logs":
-        pager_command: Final[tuple[str, ...]] = (
-            "/usr/bin/less",
-            *own_args.less_opts,
+        _logger.info("Will pipe command stdout and stderr to 'less'")
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.execl(
+            "/bin/sh",
+            "/bin/sh",
+            "-c",
+            f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
         )
-        _logger.debug(f"{pager_command=}")
-        with subprocess.Popen(
-            final_command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
-        ) as compose_proc:
-            pager_status = subprocess.run(pager_command, stdin=compose_proc.stdout)
-            assert compose_proc.stdout is not None
-            compose_proc.stdout.close()
-
-        compose_returncode: int = compose_proc.poll()  # type: ignore[assignment]
-        pager_returncode: int = pager_status.returncode
-        if compose_returncode < 0:
-            _logger.warning(
-                "'%s' received signal %d [%s]",
-                " ".join(final_command),
-                -compose_returncode,
-                signal.strsignal(-compose_returncode),
-            )
-            compose_returncode = 1
-        if pager_returncode < 0:
-            _logger.warning(
-                "'%s' received signal %d [%s]",
-                " ".join(pager_command),
-                -pager_returncode,
-                signal.strsignal(-pager_returncode),
-            )
-            pager_returncode = 1
-
-        sys.exit(compose_returncode or pager_returncode)
 
     case _:
         sys.stdout.flush()
