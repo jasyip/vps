@@ -10,10 +10,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 FROM caddy:${CADDY_VERSION}-alpine
 # Just copy the config files, no need for volume!
 # VOLUME /config
+VOLUME /data
 
 COPY --from=builder /usr/bin/caddy /usr/bin/caddy
 
-VOLUME /data
 
 COPY Caddyfile /etc/caddy/
 COPY site/ /srv/

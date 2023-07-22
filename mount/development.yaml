@@ -3,6 +3,8 @@ services:
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/site:/srv:ro
+    ports:
+      - 2019:2019
   crowdsec:
     ports:
       - 6060:6060
