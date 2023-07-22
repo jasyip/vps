@@ -1,15 +1,19 @@
 {
-    debug
-    crowdsec {
-        api_url http://crowdsec:8080
-        api_key "{$CROWDSEC_BOUNCER_API_KEY}"
-        ticker_interval 15s
-        # disable_streaming
-        # enable_hard_fails
-    }
+
+  crowdsec {
+    api_url http://crowdsec:8080
+    api_key `{$CROWDSEC_BOUNCER_API_KEY}`
+    ticker_interval 15s
+    # disable_streaming
+    # enable_hard_fails
+  }
 }
 
-* {
+www.localhost {
+  redir https://localhost{uri}
+}
+
+localhost {
   log {
     output file /var/log/caddy/access.log
   }
@@ -18,3 +22,38 @@
     file_server
   }
 }
+
+
+# {
+#   # TODO: apply debug and local_certs option for development mode
+#   email `{$EMAIL}`
+# 
+#   servers {$DOMAIN}:443 {
+#     name public
+#   }
+# 
+#   crowdsec {
+#     api_url http://crowdsec:8080
+#     api_key `{$CROWDSEC_BOUNCER_API_KEY}`
+#     ticker_interval 15s
+#     # disable_streaming
+#     # enable_hard_fails
+#   }
+# }
+# 
+# www.localhost {
+#   redir https://localhost{uri}
+# }
+# `www.{$DOMAIN}` {
+#   redir https://{$DOMAIN}{uri} permanent
+# }
+# 
+# `{$DOMAIN}`, localhost {
+#   log {
+#     output file /var/log/caddy/access.log
+#   }
+#   route {
+#     crowdsec
+#     file_server
+#   }
+# }
