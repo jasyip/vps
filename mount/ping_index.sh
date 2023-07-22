@@ -2,9 +2,9 @@
 
 for i in \
   "http://localhost:50080" \
-  "-k https://localhost:50443" \
+  "-k -L https://localhost:50443" \
   ; do
-  COMMAND="curl -i $i"
+  COMMAND="curl -i -f $i"
   echo "+ $COMMAND"
   eval "$COMMAND" || exit
   echo
