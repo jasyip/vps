@@ -1,2 +1,9 @@
 x-restart: &restart
   restart: unless-stopped
+
+services:
+  caddy:
+    environment:
+      DOMAIN: "$DOMAIN"
+      EMAIL: "$EMAIL"
+      CADDY_EXTRA_DIRECTIVES: "import production"

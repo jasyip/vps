@@ -15,9 +15,7 @@ services:
       tags:
         - "server_caddy:${CADDY_VERSION}"
     environment:
-      DOMAIN: "$DOMAIN"
-      EMAIL: "$EMAIL"
-      CROWDSEC_BOUNCER_API_KEY: "$CROWDSEC_BOUNCER_API_KEY"
+      CROWDSEC_BOUNCER_API_KEY: "$BOUNCER_KEY_caddy"
     volumes:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data
@@ -50,7 +48,8 @@ services:
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
-      BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_API_KEY"
+      BOUNCER_KEY_caddy: "$BOUNCER_KEY_caddy"
+      BOUNCER_KEY_firewall: "$BOUNCER_KEY_firewall"
       GID: 1000
     expose:
       - 8080

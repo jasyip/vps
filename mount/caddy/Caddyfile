@@ -1,5 +1,4 @@
-{
-
+(global) {
   crowdsec {
     api_url http://crowdsec:8080
     api_key `{$CROWDSEC_BOUNCER_API_KEY}`
@@ -9,51 +8,46 @@
   }
 }
 
-www.localhost {
-  redir https://localhost{uri}
+
+(public_website) {
+  {args.0} {
+    log {
+      output file /var/log/caddy/access.log
+    }
+    route {
+      crowdsec
+      file_server
+    }
+  }
 }
 
-localhost {
-  log {
-    output file /var/log/caddy/access.log
+
+(development) {
+  {
+    import global
+    debug
   }
-  route {
-    crowdsec
-    file_server
-  }
+
+  import public_website localhost
 }
 
+(production) {
+  {
+    import global
 
-# {
-#   # TODO: apply debug and local_certs option for development mode
-#   email `{$EMAIL}`
-# 
-#   servers {$DOMAIN}:443 {
-#     name public
-#   }
-# 
-#   crowdsec {
-#     api_url http://crowdsec:8080
-#     api_key `{$CROWDSEC_BOUNCER_API_KEY}`
-#     ticker_interval 15s
-#     # disable_streaming
-#     # enable_hard_fails
-#   }
-# }
-# 
-# www.localhost {
-#   redir https://localhost{uri}
-# }
-# `www.{$DOMAIN}` {
-#   redir https://{$DOMAIN}{uri} permanent
-# }
-# 
-# `{$DOMAIN}`, localhost {
-#   log {
-#     output file /var/log/caddy/access.log
-#   }
-#   route {
-#     crowdsec
-#     file_server
-#   }
-# }
+    email `{$EMAIL}`
+
+    servers `{$DOMAIN}:443` {
+      name public
+    }
+
+  }
+
+
+  `www.{$DOMAIN}` {
+    redir https://{$DOMAIN}{uri} permanent
+  }
+  import public_website `{$DOMAIN}, localhost`
+}
+
+{$CADDY_EXTRA_DIRECTIVES}
