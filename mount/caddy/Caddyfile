@@ -1,4 +1,8 @@
 (global) {
+  servers {
+    metrics
+  }
+
   crowdsec {
     api_url http://crowdsec:8080
     api_key `{$CROWDSEC_BOUNCER_API_KEY}`
