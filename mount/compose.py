@@ -126,19 +126,18 @@ subprocess.run(SET_METADATA_CMD, check=True)
 final_command: Final[tuple[str, ...]] = command()
 _logger.info(f"Executing: {final_command}")
 
-match subcommand:
-    case "logs":
-        _logger.info("Will pipe command stdout and stderr to 'less'")
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os.execl(
-            "/bin/sh",
-            "/bin/sh",
-            "-c",
-            f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
-        )
+if subcommand == "logs" and "--help" not in chain.from_iterable(chain(main_args, subcommand_args)):
+    _logger.info("Will pipe command stdout and stderr to 'less'")
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os.execl(
+        "/bin/sh",
+        "/bin/sh",
+        "-c",
+        f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
+    )
 
-    case _:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os.execvp(final_command[0], final_command)
+else:
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os.execvp(final_command[0], final_command)
