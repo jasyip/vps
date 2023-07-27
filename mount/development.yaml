@@ -11,6 +11,8 @@ services:
     ports:
       - 6060:6060
       - 8080:8080
+    environment:
+      LEVEL_DEBUG: true
   # radicale:
   #   ports:
   #     - 127.0.0.1:5232:5232

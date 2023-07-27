@@ -48,14 +48,23 @@ services:
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
+      PARSERS: >-
+        crowdsecurity/dropbear-logs
+      DISABLE_PARSERS: >-
+        crowdsecurity/cri-logs
+        crowdsecurity/docker-logs
+        crowdsecurity/sshd-logs
+        crowdsecurity/geoip-enrich
       BOUNCER_KEY_caddy: "$BOUNCER_KEY_caddy"
       BOUNCER_KEY_firewall: "$BOUNCER_KEY_firewall"
       GID: 1000
+    ports:
+      - 8080:8080
     expose:
-      - 8080
+      - 6060
     volumes:
       - caddy_logs:/var/log/caddy:ro
-      - /var/log/messages:/var/log/host/messages:ro
+      - /var/log/dropbear.log:/var/log/host/dropbear.log:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
     init: true
