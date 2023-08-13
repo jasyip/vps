@@ -1,143 +1,275 @@
 import sys
 
-sys.dont_write_bytecode = True
+if __name__ == "__main__":
+    sys.dont_write_bytecode = True
 
+import json
 import logging
 import os
 import re
 import shlex
 import subprocess
 from argparse import ArgumentParser
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable, Sequence, Set
 from itertools import chain
 from pathlib import Path, PurePath
-from typing import Final, Optional
+from pprint import pformat
+from subprocess import DEVNULL, PIPE
+from typing import Any, Final, NoReturn, Optional
 
-COMPOSE: Final[str] = "podman-compose"
-SET_METADATA_CMD: Final[tuple[str, ...]] = ("/opt/set-metadata", ".", "server")
-main_args: Final[list[tuple[str, ...]]] = [("-f", "compose.yaml")]
-subcommand_args: Final[list[tuple[str, ...]]] = []
+_COMPOSE: Final[str] = "podman-compose"
+_SET_METADATA_CMD: Final[tuple[str, ...]] = ("/opt/set-metadata", ".", "server")
+_main_args: Final[tuple[str, ...]] = ("-f", "compose.yaml")
+_subcommand_args: Final[tuple[str, ...]] = tuple()
 
-own_parser: Final = ArgumentParser()
-own_parser.add_argument("-d", "--debug", action="store_true")
-own_parser.add_argument(
+_own_parser: Final = ArgumentParser()
+_own_parser.add_argument("-d", "--debug", action="store_true")
+_own_parser.add_argument(
     "--less-opts",
     default="",
     type=shlex.split,
-    help=f"options to pass to 'less', which may be invoked depending on provided {COMPOSE} subcommand",
+    help=", ".join(
+        (
+            "options to pass to 'less'",
+            f"which may be invoked depending on provided {_COMPOSE} subcommand",
+        )
+    ),
 )
 
 _logger: Final = logging.getLogger(__name__)
 
-
-def _first_ind(f, default: int = len(sys.argv)) -> int:
-    return next((i for i, arg in enumerate(sys.argv[1:], 1) if f(arg)), default)
-
-
-_subcommand_ind: int = _first_ind(lambda arg: not re.match(r"\s*-", arg))
-if _subcommand_ind == len(sys.argv):
-    if _first_ind(lambda arg: arg in {"-h", "--help"}) < _first_ind(
-        lambda arg: arg == "--"
-    ):
-        own_parser.print_help(sys.stderr)
-        sys.exit(2)
-    raise ValueError("subcommand not provided")
-
-# additional_X_args: from user input without translation
-own_args, additional_main_args = own_parser.parse_known_args(
-    sys.argv[1:_subcommand_ind]
-)
-logging.basicConfig(
-    stream=sys.stderr, level=logging.DEBUG if own_args.debug else logging.INFO
-)
-
-_logger.debug(f"Parsed arguments for ownself: {own_args}")
-
-_logger.debug(f"Initial {main_args=}")
-_logger.debug(f"Initial {subcommand_args=}")
-
-os.chdir(PurePath(__file__).parent)
-
-subcommand: Final[str] = sys.argv[_subcommand_ind]
-_logger.debug(f"{subcommand=}")
+_reload_commands: Final[dict[str, Sequence[str]]] = {
+    "caddy": ("exec", "caddy", "reload", "--config", "/etc/caddy/Caddyfile"),
+    "crowdsec": ("kill", "--signal=HUP"),
+    "prometheus": ("kill", "--signal=HUP"),
+}
 
 
-def command(args: Optional[Iterable[str]] = None) -> tuple[str, ...]:
-    output: tuple[str, ...] = (COMPOSE, *chain.from_iterable(main_args))
+def _first_ind(
+    args: Optional[Sequence[str]] = None,
+    /,
+    f: Callable[[str], bool] = lambda arg: not re.match(r"\s*-", arg),
+    *,
+    start: int = 0,
+) -> int:
     if args is None:
-        output = output + (subcommand, *chain.from_iterable(subcommand_args))
-    else:
-        output = output + tuple(
-            args
-            if all(isinstance(arg, str) for arg in args)
-            else chain.from_iterable(args)
-        )
-
-    _logger.debug(f"Will execute: {output}")
-    return output
+        args = sys.argv
+        start = 1
+    arg: str
+    for arg in args[start:]:
+        if f(arg):
+            break
+        start += 1
+    return start
 
 
-match subcommand:
-    case "build":
-        subcommand_args.append(("--pull",))
+def main() -> NoReturn:
+    main_args: Final[list[tuple[str, ...]]] = [_main_args]
+    subcommand_args: Final[list[tuple[str, ...]]] = [_subcommand_args]
 
-    case "up":
-        subcommand_args.append(("-d",))
+    _subcommand_ind: int = _first_ind()
+    if _subcommand_ind == len(sys.argv):
+        if _first_ind(f=lambda arg: arg in {"-h", "--help"}) < _first_ind(
+            f=lambda arg: arg == "--"
+        ):
+            _own_parser.print_help(sys.stderr)
+            sys.exit(2)
+        raise ValueError("subcommand not provided")
 
-additional_subcommand_args: Final[list[str]] = sys.argv[_subcommand_ind + 1 :]
-
-match subcommand:
-    case (
-        "pull"
-        | "push"
-        | "build"
-        | "up"
-        | "down"
-        | "run"
-        | "start"
-        | "stop"
-        | "restart"
-        | "logs"
-        | "port"
-        | "pause"
-        | "unpause"
-        | "kill"
-    ):
-        for i, arg in enumerate(additional_subcommand_args):
-            if not arg.startswith("-"):
-                additional_subcommand_args[i] = arg.rstrip("/")
-    case "exec":
-        for i, arg in enumerate(additional_subcommand_args):
-            if not arg.startswith("-"):
-                additional_subcommand_args[i] = arg.rstrip("/")
-                break
-
-main_args.append(tuple(additional_main_args))
-subcommand_args.append(tuple(additional_subcommand_args))
-del additional_main_args, additional_subcommand_args
-
-_logger.debug(f"main_args after parsing subcommand: {main_args}")
-_logger.debug(f"subcommand_args after parsing subcommand: {subcommand_args}")
-
-
-_logger.debug(f"Executing {SET_METADATA_CMD}")
-subprocess.run(SET_METADATA_CMD, check=True)
-
-final_command: Final[tuple[str, ...]] = command()
-_logger.info(f"Executing: {final_command}")
-
-if subcommand == "logs" and "--help" not in chain.from_iterable(chain(main_args, subcommand_args)):
-    _logger.info("Will pipe command stdout and stderr to 'less'")
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os.execl(
-        "/bin/sh",
-        "/bin/sh",
-        "-c",
-        f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
+    # additional_X_args: from user input without translation
+    own_args, additional_main_args = _own_parser.parse_known_args(
+        sys.argv[1:_subcommand_ind]
+    )
+    logging.basicConfig(
+        stream=sys.stderr, level=logging.DEBUG if own_args.debug else logging.INFO
     )
 
-else:
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os.execvp(final_command[0], final_command)
+    _logger.debug(f"Parsed arguments for ownself: {own_args}")
+
+    _logger.debug(f"Initial {main_args=}")
+    _logger.debug(f"Initial {subcommand_args=}")
+
+    os.chdir(PurePath(__file__).parent)
+
+    subcommand: Final[str] = sys.argv[_subcommand_ind]
+    _logger.debug(f"{subcommand=}")
+
+    def command(*args) -> tuple[str, ...]:
+        output: Final[list[str]] = [_COMPOSE]
+        output.extend(chain.from_iterable(main_args))
+        if args:
+            laid_args: Final[list[str]] = []
+            arg: str | Iterable[str]
+            for arg in args if len(args) > 1 or isinstance(args[0], str) else args[0]:
+                if isinstance(arg, str):
+                    laid_args.append(arg)
+                else:
+                    laid_args.extend(arg)
+
+            output.extend(laid_args)
+        else:
+            output.append(subcommand)
+            output.extend(chain.from_iterable(subcommand_args))
+
+        _logger.debug(f"Will execute: {output}")
+        return tuple(output)
+
+    # Default subcommand arguments
+    match subcommand:
+        case "build":
+            subcommand_args.append(("--pull",))
+
+        case "up":
+            subcommand_args.append(("-d",))
+
+    additional_subcommand_args: Final[list[str]] = sys.argv[_subcommand_ind + 1 :]
+
+    i: int
+    arg: str
+    # Strip trailing slashes in container command arguments
+    match subcommand:
+        case (
+            "pull"
+            | "push"
+            | "build"
+            | "up"
+            | "down"
+            | "run"
+            | "start"
+            | "stop"
+            | "restart"
+            | "logs"
+            | "port"
+            | "pause"
+            | "unpause"
+            | "kill"
+            | "reload"
+        ):
+            for i, arg in enumerate(additional_subcommand_args):
+                if not arg.startswith("-"):
+                    additional_subcommand_args[i] = arg.rstrip("/")
+        case "exec":
+            for i, arg in enumerate(additional_subcommand_args):
+                if not arg.startswith("-"):
+                    additional_subcommand_args[i] = arg.rstrip("/")
+                    break
+
+    main_args.append(tuple(additional_main_args))
+    del additional_main_args
+
+    _logger.debug(f"main_args after parsing subcommand: {main_args}")
+
+    _logger.debug(f"Executing {_SET_METADATA_CMD}")
+    subprocess.run(_SET_METADATA_CMD, check=True)
+
+    if subcommand == "reload":
+        specific_containers: Final[Set[str]] = frozenset(
+            arg for arg in additional_subcommand_args if not arg.startswith("-")
+        )
+        ps_proc: Final = subprocess.run(
+            command("--podman-args", "--all --format json", "ps"),
+            stdout=PIPE,
+            stderr=DEVNULL,
+            check=True,
+            text=True,
+        )
+        ps_json_output: Final[list] = json.loads(ps_proc.stdout)
+        reload_statuses: Final[dict[str, int]] = {}
+
+        container: dict[str, Any]
+        for container in ps_json_output:
+            service = container["Labels"]["com.docker.compose.service"]
+            if (
+                container["State"] in {"dead", "exited"}
+                or service not in _reload_commands
+                or (specific_containers and service in specific_containers)
+            ):
+                _logger.debug(f"NOT reloading service '{service}'")
+                continue
+
+            reload_command: tuple[str, ...] = tuple(_reload_commands[service])
+            main_reload_command_ind: int = _first_ind(reload_command)
+
+            final_reload_command: list[str] = []
+            match reload_command[main_reload_command_ind]:
+                case "exec":
+                    final_reload_command.append("-d")
+
+            final_reload_command.extend(reload_command[: main_reload_command_ind + 1])
+            reload_subcommand_args: tuple[str, ...] = reload_command[
+                main_reload_command_ind + 1 :
+            ]
+
+            match reload_command[main_reload_command_ind]:
+                case "exec":
+                    exec_command_ind: int = min(
+                        _first_ind(reload_subcommand_args),
+                        _first_ind(reload_subcommand_args, lambda arg: arg == "--") + 1,
+                    )
+                    final_reload_command.extend(
+                        reload_subcommand_args[:exec_command_ind]
+                    )
+                    final_reload_command.append(service)
+                    final_reload_command.extend(
+                        reload_subcommand_args[exec_command_ind:]
+                    )
+
+                case "kill" | _:
+                    final_reload_command.extend(reload_command)
+                    final_reload_command.append(service)
+
+            reload_statuses[service] = subprocess.run(
+                command(final_reload_command),
+                stderr=DEVNULL,
+            ).returncode
+
+        if not reload_statuses:
+            _logger.warning("No services were reloaded")
+        elif any(reload_statuses.values()):
+            _logger.error(
+                " ".join(
+                    (
+                        "Some of the return codes of each service's reload command",
+                        "reported failures:",
+                        pformat(reload_statuses),
+                    )
+                )
+            )
+            error_codes: Final[Set[int]] = frozenset(filter(None, reload_statuses.values()))
+            sys.exit(next(iter(error_codes)) if len(error_codes) == 1 else 1)
+        else:
+            _logger.info(
+                f"Services {tuple(reload_statuses.keys())} successfully reloaded"
+            )
+
+        sys.exit()
+
+    subcommand_args.append(tuple(additional_subcommand_args))
+    del additional_subcommand_args
+
+    _logger.debug(f"subcommand_args after parsing subcommand: {subcommand_args}")
+
+    final_command: Final[tuple[str, ...]] = command()
+    _logger.info(f"Executing: {final_command}")
+
+    if subcommand == "logs" and "--help" not in chain.from_iterable(
+        chain(main_args, subcommand_args)
+    ):
+        _logger.info("Will pipe command stdout and stderr to 'less'")
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.execl(
+            "/bin/sh",
+            "/bin/sh",
+            "-c",
+            f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
+        )
+
+    else:
+        sys.stdout.flush()
+        sys.stderr.flush()
+        os.execvp(final_command[0], final_command)
+
+
+if __name__ == "__main__":
+    main()
