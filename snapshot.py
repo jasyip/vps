@@ -24,13 +24,13 @@ def _disable_cow(dest: PathLike) -> bool:
     if not dest.exists():
         dest.touch()
         process: Final = subprocess.run(
-            ("/usr/bin/chattr", "+C", str(dest)), check=True
+            ("chattr", "+C", str(dest)), check=True
         )
         return process.returncode == 0
     return False
 
 
-def _qemu_img(args):
+def _qemu_img(args: Iterable[str]) -> subprocess.CompletedProcess:
     _logger.debug(f"{args=}")
     return subprocess.run((QEMU_IMG, *args), check=True)
 
@@ -40,7 +40,7 @@ def _merge_snapshot(
 ) -> None:
     _disable_cow(dest)
 
-    process_args: Final[tuple[str, ...]] = (
+    _qemu_img((
         "convert",
         "-f",
         source_fmt,
@@ -48,22 +48,20 @@ def _merge_snapshot(
         dest_fmt,
         str(source),
         str(dest),
-    )
-    _qemu_img(process_args)
+    ))
 
 
 def _create_snapshot(source: PathLike, dest: PathLike, source_fmt: str = "raw") -> None:
     _disable_cow(dest)
 
-    process_args: Final[tuple[str, ...]] = (
+    _qemu_img((
         "create",
         "-o",
         f"backing_file={source},backing_fmt={source_fmt}",
         "-f",
         "qcow2",
         str(dest),
-    )
-    _qemu_img(process_args)
+    ))
 
 
 @total_ordering
@@ -83,7 +81,8 @@ def _get_all(backing: PathLike) -> Iterable[_Snapshot]:
     if not backing.is_file():
         raise ValueError(f"'{backing}' is not a file")
 
-    output: list[_Snapshot] = []
+    output: Final[list[_Snapshot]] = []
+    path: Path
     for path in backing.parent.iterdir():
         version_match: Optional[re.Match[str]] = re.fullmatch(
             re.escape(backing.name[: backing.name.find(".")])
@@ -98,6 +97,7 @@ def _get_all(backing: PathLike) -> Iterable[_Snapshot]:
 
 def _get_latest(backing: PathLike) -> Optional[_Snapshot]:
     latest_snapshot: Optional[_Snapshot] = None
+    snapshot: _Snapshot
     for snapshot in _get_all(backing):
         if latest_snapshot is None or snapshot > latest_snapshot:
             latest_snapshot = snapshot
@@ -110,7 +110,7 @@ def _get_latest(backing: PathLike) -> Optional[_Snapshot]:
 
 def latest_snapshot(backing: PathLike) -> Path:
     backing = Path(backing)
-    latest_snapshot: Optional[_Snapshot] = _get_latest(backing)
+    latest_snapshot: Final[Optional[_Snapshot]] = _get_latest(backing)
     if latest_snapshot is not None:
         return latest_snapshot.path
     new_path: Final[Path] = backing.with_name(f"{backing.stem}_1.qcow2")
@@ -120,7 +120,7 @@ def latest_snapshot(backing: PathLike) -> Path:
 
 def new_snapshot(backing: PathLike, **kwargs) -> Path:
     backing = Path(backing)
-    latest_snapshot: Optional[_Snapshot] = _get_latest(backing)
+    latest_snapshot: Final[Optional[_Snapshot]] = _get_latest(backing)
     new_version: int
     backing_file: Path
     if latest_snapshot is None:
@@ -158,6 +158,7 @@ def merge_snapshots(backing: PathLike, **kwargs) -> Optional[Path]:
 
     if kwargs.pop("overwrite"):
         shutil.move(merge_output_path, backing)
+        snapshot: _Snapshot
         for snapshot in _get_all(backing):
             snapshot.path.unlink()
         return None
@@ -184,7 +185,7 @@ if __name__ == "__main__":
         stream=sys.stderr, level=logging.DEBUG if args.debug else logging.INFO
     )
 
-    output: Optional[Path] = args.func(**vars(args))
+    output: Final[Optional[Path]] = args.func(**vars(args))
     if output is None:
         _logger.info("Done!")
     else:

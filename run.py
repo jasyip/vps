@@ -22,11 +22,16 @@ import config
 
 
 def mount_options(flag: str, *args) -> tuple[str, ...]:
-    args = list(args)  # type: ignore[assignment]
+    args = list(args)
     if args and "," in args[-1]:
 
         kwpairs: Final[list[str]] = args[-1].split(",")
+        i: int
+        pair: str
         for i, pair in enumerate(kwpairs):
+            key: str
+            separator: str
+            value: str
             key, separator, value = pair.partition("=")
             key = key.strip()
             value = value.strip()
@@ -65,11 +70,15 @@ if __name__ == "__main__":
 
     if main_args.base_image is None:
         raw_images: Final[set[Path]] = set()
+        child: Path
+
         for child in ROOT_DIR.iterdir():
             if child.suffix.removeprefix(".") in {"raw", "img"}:
                 raw_images.add(child)
+
         if len(raw_images) != 1:
             parser.error("cannot unambiguously assume base image, please provide")
+
         main_args.base_image = next(iter(raw_images))
 
     _logger.debug(f"{qemu_args=}")
