@@ -4,13 +4,16 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/site:/srv:ro
     ports:
-      - 2019:2019
+      - 127.0.0.1:2019:2019
     environment:
       CADDY_EXTRA_DIRECTIVES: "import development"
+
   crowdsec:
     ports:
-      - 6060:6060
-      - 8080:8080
+      - 127.0.0.1:6060:6060
+    environment:
+      LEVEL_DEBUG: "true"
+
     environment:
       LEVEL_DEBUG: true
   # radicale:

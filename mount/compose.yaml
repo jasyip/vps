@@ -59,7 +59,7 @@ services:
       BOUNCER_KEY_firewall: "$BOUNCER_KEY_firewall"
       GID: 1000
     ports:
-      - 8080:8080
+      - 127.0.0.1:8080:8080
     expose:
       - 6060
     volumes:
@@ -67,7 +67,6 @@ services:
       - /var/log/dropbear.log:/var/log/host/dropbear.log:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
-    init: true
     healthcheck:
       test: wget -q --spider localhost:8080/health
     read_only: true
