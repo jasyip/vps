@@ -48,12 +48,10 @@ services:
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
-      PARSERS: >-
-        crowdsecurity/dropbear-logs
+        crowdsecurity/sshd
       DISABLE_PARSERS: >-
         crowdsecurity/cri-logs
         crowdsecurity/docker-logs
-        crowdsecurity/sshd-logs
         crowdsecurity/geoip-enrich
       BOUNCER_KEY_caddy: "$BOUNCER_KEY_caddy"
       BOUNCER_KEY_firewall: "$BOUNCER_KEY_firewall"
@@ -64,7 +62,7 @@ services:
       - 6060
     volumes:
       - caddy_logs:/var/log/caddy:ro
-      - /var/log/dropbear.log:/var/log/host/dropbear.log:ro
+      - /var/log/sshd.log:/var/log/host/sshd.log:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
     healthcheck:

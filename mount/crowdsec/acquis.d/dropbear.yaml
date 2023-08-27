@@ -1,4 +1,0 @@
-source: file
-filename: /var/log/host/dropbear.log
-labels:
-  type: syslog
