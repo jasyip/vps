@@ -1,0 +1,18 @@
+table inet nat {
+    chain prerouting {
+        type nat hook prerouting priority -100;
+        iif eth0 tcp dport http redirect to :50080
+        iif eth0 tcp dport https redirect to :50443
+        iif eth0 udp dport http redirect to :50080
+        iif eth0 udp dport https redirect to :50443
+    }
+    chain input     { type nat hook input priority 100; }
+    chain output        {
+        type nat hook output priority -100;
+        oif lo tcp dport http redirect to :50080
+        oif lo tcp dport https redirect to :50443
+        oif lo udp dport http redirect to :50080
+        oif lo udp dport https redirect to :50443
+    }
+    chain postrouting   { type nat hook postrouting priority 100; }
+}
