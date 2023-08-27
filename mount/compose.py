@@ -182,7 +182,7 @@ def main() -> NoReturn:
             if (
                 container["State"] in {"dead", "exited"}
                 or service not in _reload_commands
-                or (specific_containers and service in specific_containers)
+                or (specific_containers and service not in specific_containers)
             ):
                 _logger.debug(f"NOT reloading service '{service}'")
                 continue
@@ -252,23 +252,22 @@ def main() -> NoReturn:
     final_command: Final[tuple[str, ...]] = command()
     _logger.info(f"Executing: {final_command}")
 
-    if subcommand == "logs" and "--help" not in chain.from_iterable(
-        chain(main_args, subcommand_args)
-    ):
-        _logger.info("Will pipe command stdout and stderr to 'less'")
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os.execl(
-            "/bin/sh",
-            "/bin/sh",
-            "-c",
-            f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
-        )
+    if "--help" not in chain.from_iterable(chain(main_args, subcommand_args)):
+        match subcommand:
+            case "logs":
+                _logger.info("Will pipe command stdout and stderr to 'less'")
+                sys.stdout.flush()
+                sys.stderr.flush()
+                os.execl(
+                    "/bin/sh",
+                    "/bin/sh",
+                    "-c",
+                    f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
+                )
 
-    else:
-        sys.stdout.flush()
-        sys.stderr.flush()
-        os.execvp(final_command[0], final_command)
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os.execvp(final_command[0], final_command)
 
 
 if __name__ == "__main__":
