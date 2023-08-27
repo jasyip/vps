@@ -3,14 +3,10 @@ services:
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/site:/srv:ro
-    ports:
-      - 127.0.0.1:2019:2019
     environment:
       CADDY_EXTRA_DIRECTIVES: "import development"
 
   crowdsec:
-    ports:
-      - 127.0.0.1:6060:6060
     environment:
       LEVEL_DEBUG: "true"
 
