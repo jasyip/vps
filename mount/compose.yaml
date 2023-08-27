@@ -25,11 +25,6 @@ services:
     ports:
       - 50080:80
       - 50443:443
-    depends_on:
-      crowdsec:
-        restart: false
-        condition: service_healthy
-        required: false
     # read_only: true
     security_opt:
       - no-new-privileges:true
