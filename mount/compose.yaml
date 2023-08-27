@@ -16,6 +16,7 @@ services:
         - "server_caddy:${CADDY_VERSION}"
     environment:
       CROWDSEC_BOUNCER_API_KEY: "$BOUNCER_KEY_caddy"
+      GRAFANA_SUBDOMAIN: "$GRAFANA_SUBDOMAIN"
     volumes:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data
@@ -74,6 +75,46 @@ services:
     group_add:
       - keep-groups
 
+  prometheus:
+    <<: *restart
+    build:
+      context: prometheus
+      args:
+        PROMETHEUS_VERSION: "$PROMETHEUS_VERSION"
+      tags:
+        - "server_prometheus:${PROMETHEUS_VERSION}"
+    volumes:
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: wget -q --spider localhost:9090/-/healthy
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+  grafana:
+    <<: *restart
+    build:
+      context: grafana
+      args:
+        GRAFANA_VERSION: "$GRAFANA_VERSION"
+      tags:
+        - "server_grafana:${GRAFANA_VERSION}"
+    expose:
+      - 3000
+    # depends_on:
+    #   prometheus:
+    #     restart: false
+    #     condition: service_healthy
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_logs:/var/log/grafana
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
 
   # radicale:
   #   build:
@@ -127,6 +168,11 @@ volumes:
 
   crowdsec_config:
   crowdsec_data:
+
+  prometheus_data:
+
+  grafana_data:
+  grafana_logs:
 
   # radicale_data:
 

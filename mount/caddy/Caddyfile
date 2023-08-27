@@ -13,17 +13,42 @@
 }
 
 
-(public_website) {
-  {args.0} {
+(servers) {
+
+  :2019 {
+    @metrics {
+      remote_ip private_ranges
+      path /metrics
+    }
+
+    handle @metrics {
+      metrics
+    }
+    handle {
+      abort
+    }
+  }
+
+  `www.{args[0]}` {
+    redir https://{args[0]}{uri} permanent
+  }
+
+  {args[0]} {
     log {
       output file /var/log/caddy/access.log
     }
+
     route {
       crowdsec
       file_server
     }
   }
+
+  `{$GRAFANA_SUBDOMAIN}.{args[0]}` {
+    reverse_proxy http://grafana:3000
+  }
 }
+
 
 
 (development) {
@@ -32,7 +57,7 @@
     debug
   }
 
-  import public_website localhost
+  import servers localhost
 }
 
 (production) {
@@ -44,14 +69,9 @@
     servers `{$DOMAIN}:443` {
       name public
     }
-
   }
 
-
-  `www.{$DOMAIN}` {
-    redir https://{$DOMAIN}{uri} permanent
-  }
-  import public_website `{$DOMAIN}, localhost`
+  import servers `{$DOMAIN}`
 }
 
 {$CADDY_EXTRA_DIRECTIVES}
