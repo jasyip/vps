@@ -110,6 +110,8 @@ services:
     volumes:
       - grafana_data:/var/lib/grafana
       - grafana_logs:/var/log/grafana
+    healthcheck:
+      test: wget -q --spider localhost:3000/api/health
     read_only: true
     security_opt:
       - no-new-privileges:true
