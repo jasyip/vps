@@ -11,8 +11,11 @@ services:
       crowdsec:
         restart: false
         condition: service_healthy
-        required: false
 
   grafana:
     environment:
       GF_SERVER_DOMAIN: "${GRAFANA_SUBDOMAIN}.${DOMAIN}"
+    depends_on:
+      prometheus:
+        restart: false
+        condition: service_healthy

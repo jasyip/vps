@@ -103,10 +103,6 @@ services:
         - "server_grafana:${GRAFANA_VERSION}"
     expose:
       - 3000
-    # depends_on:
-    #   prometheus:
-    #     restart: false
-    #     condition: service_healthy
     volumes:
       - grafana_data:/var/lib/grafana
       - grafana_logs:/var/log/grafana
