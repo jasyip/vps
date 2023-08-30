@@ -58,10 +58,11 @@ services:
     expose:
       - 6060
     volumes:
-      - caddy_logs:/var/log/caddy:ro
-      - /var/log/sshd.log:/var/log/host/sshd.log:ro
+      - caddy_logs:/run/log/caddy:ro
+      - /var/log/sshd.log:/run/log/host/sshd.log:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
+      - crowdsec_logs:/var/log
     healthcheck:
       test: wget -q --spider localhost:8080/health
     read_only: true
@@ -165,6 +166,7 @@ volumes:
 
   crowdsec_config:
   crowdsec_data:
+  crowdsec_logs:
 
   prometheus_data:
 

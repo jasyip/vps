@@ -1,4 +1,4 @@
 filenames:
-  - /var/log/caddy/access.log
+  - /run/log/caddy/access.log
 labels:
   types: caddy

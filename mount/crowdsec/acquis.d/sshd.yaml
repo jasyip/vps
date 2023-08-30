@@ -1,4 +1,4 @@
 source: file
-filename: /var/log/host/sshd.log
+filename: /run/log/host/sshd.log
 labels:
   type: syslog
