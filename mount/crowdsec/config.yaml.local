@@ -1,6 +1,10 @@
 crowdsec_service:
   acquisition_path: ""
 
-prometheus:
-  enabled: true
-  level: full
+db_config:
+  type: pgx
+  db_path: /var/run/postgresql
+  user: crowdsec
+  password: ${CROWDSEC_POSTGRESQL_PASSWORD}
+  db_name: crowdsec
+  # sslmode: required
