@@ -10,10 +10,6 @@ services:
     environment:
       LEVEL_DEBUG: "true"
 
-  prometheus:
-    volumes:
-      - ./prometheus/:/etc/prometheus/:ro
-
   grafana:
     ports:
       - 3000:3000
