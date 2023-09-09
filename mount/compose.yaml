@@ -5,6 +5,11 @@ name: server
 x-restart: &restart
   {}
 
+x-healthcheck: &healthcheck
+  healthcheck:
+    start_period: 30s
+    timeout: 5s
+
 services:
   caddy:
     <<: *restart
@@ -37,6 +42,7 @@ services:
   # TODO: setup syslog server
   crowdsec:
     <<: *restart
+    <<: *healthcheck
     build:
       context: crowdsec
       args:
@@ -64,7 +70,7 @@ services:
       - crowdsec_data:/var/lib/crowdsec/data
       - crowdsec_logs:/var/log
     healthcheck:
-      test: wget -q --spider localhost:8080/health
+      test: wget -q --spider localhost:8080/health || exit 1
     read_only: true
     security_opt:
       - no-new-privileges:true
@@ -77,6 +83,7 @@ services:
 
   prometheus:
     <<: *restart
+    <<: *healthcheck
     build:
       context: prometheus
       args:
@@ -86,7 +93,7 @@ services:
     volumes:
       - prometheus_data:/prometheus
     healthcheck:
-      test: wget -q --spider localhost:9090/-/healthy
+      test: wget -q --spider localhost:9090/-/healthy || exit 1
     read_only: true
     security_opt:
       - no-new-privileges:true
@@ -107,7 +114,7 @@ services:
       - grafana_data:/var/lib/grafana
       - grafana_logs:/var/log/grafana
     healthcheck:
-      test: wget -q --spider localhost:3000/api/health
+      test: wget -q --spider localhost:3000/api/health || exit 1
     read_only: true
     security_opt:
       - no-new-privileges:true
