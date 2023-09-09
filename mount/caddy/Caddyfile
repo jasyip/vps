@@ -31,8 +31,16 @@
     }
   }
 
-  `www.{args[0]}` {
-    redir https://{args[0]}{uri} permanent
+  *.*.* {
+    @www {
+      expression {labels.2} == "www"
+    }
+    handle @www {
+      redir https://{labels.1}.{labels.0}{uri}
+    }
+    handle {
+      abort
+    }
   }
 
   {args[0]} {
@@ -60,6 +68,10 @@
   }
 
   import servers localhost
+
+  www.localhost {
+    redir https://localhost{uri}
+  }
 }
 
 (production) {
@@ -73,7 +85,23 @@
     }
   }
 
+  *.*.*.* {
+    @www {
+      expression {labels.3} == "www"
+    }
+    handle @www {
+      redir https://{labels.2}.{labels.1}.{labels.0}{uri}
+    }
+    handle {
+      abort
+    }
+  }
+
   import servers `{$DOMAIN}`
+
+  *.localhost {
+    redir `https://{label1}.{$DOMAIN}{uri}`
+  }
 }
 
 {$CADDY_EXTRA_DIRECTIVES}
