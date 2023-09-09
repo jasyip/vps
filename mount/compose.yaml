@@ -59,6 +59,7 @@ services:
         crowdsecurity/geoip-enrich
       BOUNCER_KEY_caddy: "$BOUNCER_KEY_caddy"
       BOUNCER_KEY_firewall: "$BOUNCER_KEY_firewall"
+      CROWDSEC_POSTGRESQL_PASSWORD: "$CROWDSEC_POSTGRESQL_PASSWORD"
     ports:
       - 127.0.0.1:8080:8080
     expose:
@@ -69,6 +70,7 @@ services:
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
       - crowdsec_logs:/var/log
+      - /run/postgresql:/var/run/postgresql
     healthcheck:
       test: wget -q --spider localhost:8080/health || exit 1
     read_only: true
@@ -76,8 +78,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    cap_add:
-      - CHOWN
     group_add:
       - keep-groups
 
@@ -102,17 +102,21 @@ services:
 
   grafana:
     <<: *restart
+    <<: *healthcheck
     build:
       context: grafana
       args:
         GRAFANA_VERSION: "$GRAFANA_VERSION"
       tags:
         - "server_grafana:${GRAFANA_VERSION}"
+    environment:
+      GRAFANA_POSTGRESQL_PASSWORD: "$GRAFANA_POSTGRESQL_PASSWORD"
     expose:
       - 3000
     volumes:
       - grafana_data:/var/lib/grafana
       - grafana_logs:/var/log/grafana
+      - /run/postgresql:/var/run/postgresql
     healthcheck:
       test: wget -q --spider localhost:3000/api/health || exit 1
     read_only: true

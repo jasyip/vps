@@ -7,4 +7,3 @@ db_config:
   user: crowdsec
   password: ${CROWDSEC_POSTGRESQL_PASSWORD}
   db_name: crowdsec
-  # sslmode: required
