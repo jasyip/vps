@@ -191,9 +191,6 @@ def main() -> NoReturn:
             main_reload_command_ind: int = _first_ind(reload_command)
 
             final_reload_command: list[str] = []
-            match reload_command[main_reload_command_ind]:
-                case "exec":
-                    final_reload_command.append("-d")
 
             final_reload_command.extend(reload_command[: main_reload_command_ind + 1])
             reload_subcommand_args: tuple[str, ...] = reload_command[
@@ -202,6 +199,8 @@ def main() -> NoReturn:
 
             match reload_command[main_reload_command_ind]:
                 case "exec":
+                    final_reload_command.append("-d")
+
                     exec_command_ind: int = min(
                         _first_ind(reload_subcommand_args),
                         _first_ind(reload_subcommand_args, lambda arg: arg == "--") + 1,
