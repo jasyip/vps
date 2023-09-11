@@ -74,7 +74,7 @@ def main() -> NoReturn:
         ):
             _own_parser.print_help(sys.stderr)
             sys.exit(2)
-        raise ValueError("subcommand not provided")
+        _own_parser.error("subcommand not provided")
 
     # additional_X_args: from user input without translation
     own_args, additional_main_args = _own_parser.parse_known_args(
