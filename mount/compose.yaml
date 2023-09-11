@@ -22,6 +22,7 @@ services:
     environment:
       CROWDSEC_BOUNCER_API_KEY: "$BOUNCER_KEY_caddy"
       GRAFANA_SUBDOMAIN: "$GRAFANA_SUBDOMAIN"
+      POSTGRESQL_PASSWORD: "$CADDY_POSTGRESQL_PASSWORD"
     volumes:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data
@@ -32,6 +33,7 @@ services:
       - 50080:80
       - 50443:443
     # read_only: true
+    network_mode: "slirp4netns:allow_host_loopback=true"
     security_opt:
       - no-new-privileges:true
     cap_drop:
