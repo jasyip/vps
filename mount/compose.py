@@ -19,7 +19,7 @@ from typing import Any, Final, NoReturn, Optional
 
 _COMPOSE: Final[str] = "podman-compose"
 _SET_METADATA_CMD: Final[tuple[str, ...]] = ("/opt/set-metadata", ".", "server")
-_main_args: Final[tuple[str, ...]] = ("-f", "compose.yaml")
+_main_args: Final[tuple[str, ...]] = ("--file=compose.yaml",)
 _subcommand_args: Final[tuple[str, ...]] = tuple()
 
 _own_parser: Final = ArgumentParser()
