@@ -13,7 +13,7 @@ FROM caddy:${CADDY_VERSION}-alpine
 # VOLUME /config
 VOLUME /data
 
-COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+COPY --from=builder /usr/bin/caddy /usr/bin/
 
 
 COPY Caddyfile /etc/caddy/
