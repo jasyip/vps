@@ -166,3 +166,4 @@ cython_debug/
 /OVMF_VARS.fd
 
 /mount/caddy/site/*
+/mount/secrets/
