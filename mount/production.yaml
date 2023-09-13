@@ -6,7 +6,7 @@ services:
     environment:
       DOMAIN: "$DOMAIN"
       EMAIL: "$EMAIL"
-      CADDY_EXTRA_DIRECTIVES: "import production"
+      EXTRA_DIRECTIVES: "import production"
     depends_on:
       crowdsec:
         restart: false
@@ -14,7 +14,7 @@ services:
 
   grafana:
     environment:
-      GF_SERVER_DOMAIN: "${GRAFANA_SUBDOMAIN}.${DOMAIN}"
+      GF_SERVER_DOMAIN: "${SUBDOMAIN_GRAFANA}.${DOMAIN}"
     depends_on:
       prometheus:
         restart: false

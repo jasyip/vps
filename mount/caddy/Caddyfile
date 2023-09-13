@@ -17,7 +17,7 @@
 
   crowdsec {
     api_url http://crowdsec:8080
-    api_key `{$CROWDSEC_BOUNCER_API_KEY}`
+    api_key `{$CROWDSEC_BOUNCER_KEY}`
     ticker_interval 15s
     # disable_streaming
     # enable_hard_fails
@@ -64,7 +64,7 @@
     }
   }
 
-  `{$GRAFANA_SUBDOMAIN}.{args[0]}` {
+  `{$SUBDOMAIN_GRAFANA}.{args[0]}` {
     reverse_proxy http://grafana:3000
   }
 }
@@ -114,4 +114,4 @@
   }
 }
 
-{$CADDY_EXTRA_DIRECTIVES}
+{$EXTRA_DIRECTIVES}

@@ -5,5 +5,5 @@ db_config:
   type: pgx
   db_path: /var/run/postgresql
   user: crowdsec
-  password: ${CROWDSEC_POSTGRESQL_PASSWORD}
+  password: ${POSTGRESQL_PASSWORD}
   db_name: crowdsec

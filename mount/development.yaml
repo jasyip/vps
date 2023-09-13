@@ -4,7 +4,7 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/site:/srv:ro
     environment:
-      CADDY_EXTRA_DIRECTIVES: "import development"
+      EXTRA_DIRECTIVES: "import development"
 
   crowdsec:
     environment:
@@ -15,7 +15,7 @@ services:
       - 3000:3000
     environment:
       GF_LOG_LEVEL: debug
-      GF_SERVER_DOMAIN: "${GRAFANA_SUBDOMAIN}.localhost"
+      GF_SERVER_DOMAIN: "${SUBDOMAIN_GRAFANA}.localhost"
     volumes:
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
 
