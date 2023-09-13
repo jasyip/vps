@@ -61,6 +61,11 @@ services:
         crowdsecurity/geoip-enrich
       BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_KEY_CADDY"
       POSTGRESQL_PASSWORD: "$POSTGRESQL_PASSWORD_CROWDSEC"
+    secrets:
+      - source: crowdsec_bouncer_key_firewall
+        target: bouncer_key_firewall
+        mode: 0400
+
     ports:
       - 127.0.0.1:8080:8080
     expose:
@@ -109,15 +114,11 @@ services:
       args:
         GRAFANA_VERSION: "$VERSION_GRAFANA"
       tags:
-<<<<<<< Updated upstream
-        - "server_grafana:${GRAFANA_VERSION}"
-=======
         - "server_grafana:${VERSION_GRAFANA}"
     secrets:
       - source: postgresql_password_grafana
         target: postgresql_password
         mode: 0400
->>>>>>> Stashed changes
     expose:
       - 3000
     volumes:
@@ -191,8 +192,20 @@ volumes:
   grafana_data:
   grafana_logs:
 
+  authelia_config:
+
+  lldap_data:
+
   # radicale_data:
 
   # ejabberd_data:
   # ejabberd_logs:
   # ejabberd_uploads:
+
+secrets:
+  crowdsec_bouncer_key_firewall:
+    file: ./secrets/crowdsec_bouncer_api_keys/firewall
+  postgresql_password_grafana:
+    file: ./secrets/postgresql_passwords/grafana
+  postgresql_password_authelia:
+    file: ./secrets/postgresql_passwords/authelia
