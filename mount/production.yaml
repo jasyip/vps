@@ -9,8 +9,9 @@ services:
       EXTRA_DIRECTIVES: "import production"
     depends_on:
       crowdsec:
-        restart: false
         condition: service_healthy
+      authelia:
+        required: true
 
   grafana:
     environment:

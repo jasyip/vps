@@ -30,6 +30,10 @@ services:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data
       - caddy_pseudo_config:/config
+    depends_on:
+      authelia:
+        condition: service_healthy
+        required: false
     expose:
       - 2019
     ports:
