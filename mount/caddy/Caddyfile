@@ -11,9 +11,10 @@
     disable_ddl false
   }
 
-  # servers {
-  #   metrics
-  # }
+  servers {
+    trusted_proxies dns authelia
+    # metrics
+  }
 
   crowdsec {
     api_url http://crowdsec:8080
@@ -55,7 +56,7 @@
 
   {args[0]} {
     log {
-      output file /var/log/caddy/access.log
+      output file /var/log/caddy/public_access.log
     }
 
     route {
@@ -65,7 +66,16 @@
   }
 
   `{$SUBDOMAIN_GRAFANA}.{args[0]}` {
+    forward_auth authelia:9091 {
+      uri /api/verify?rd=https://auth.{args[0]}/
+      copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
+    }
+
     reverse_proxy http://grafana:3000
+  }
+
+  `auth.{args[0]}` {
+    reverse_proxy authelia:9091
   }
 }
 

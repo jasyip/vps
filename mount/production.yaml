@@ -19,3 +19,9 @@ services:
       prometheus:
         restart: false
         condition: service_healthy
+
+  authelia:
+    environment:
+      AUTHELIA_DEFAULT_REDIRECTION_URL: "${SUBDOMAIN_AUTHELIA}.${DOMAIN}"
+      AUTHELIA_SESSION_DOMAIN: "${SUBDOMAIN_AUTHELIA}.${DOMAIN}"
+

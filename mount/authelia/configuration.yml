@@ -1,0 +1,52 @@
+---
+
+theme: dark
+
+log:
+  file_path: /var/log/authelia.log
+
+regulation:
+  max_retries: 5
+
+password_policy:
+  zxcvbn:
+    enabled: true
+    min_score: 4
+
+totp:
+  period: 15
+
+telemetry:
+  metrics:
+    enabled: true
+
+authentication_backend:
+  ldap:
+    implemenation: custom
+    url: ldap://lldap:3890
+
+# access_control:
+#   default_policy: deny
+#   rules:
+#     - domain: public.example.com
+#       policy: bypass
+#     - domain: traefik.example.com
+#       policy: one_factor
+#     - domain: secure.example.com
+#       policy: two_factor
+
+storage:
+  postgres:
+    host: 10.0.2.2
+    database: authelia
+    username: authelia
+
+notifier:
+  filesystem:
+    filename: /config/notification.txt
+  # smtp:
+
+
+
+...
+
