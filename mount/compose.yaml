@@ -152,15 +152,18 @@ services:
     healthcheck:
       test: /app/healthcheck.sh
     volumes:
-      - authelia_config:/config
       - authelia_logs:/var/log
+    depends_on:
+      lldap:
+        condition: service_healthy
+        required: false
     environment:
       AUTHELIA_JWT_SECRET_FILE: /run/secrets/jwt_secret
       AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/storage_encryption_key
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
     secrets:
-      - source: jwt_secret
+      - source: authelia_jwt_secret
         target: jwt_secret
         mode: 0400
       - source: postgresql_password_authelia
@@ -266,14 +269,15 @@ secrets:
   postgresql_password_authelia:
     file: ./secrets/postgresql_passwords/authelia
 
-  jwt_secret:
-    file: ./secrets/jwt_secret
-
+  authelia_jwt_secret:
+    file: ./secrets/authelia/jwt_secret
   authelia_storage_encryption_key:
     file: ./secrets/authelia/storage_encryption_key
   authelia_session_secret:
     file: ./secrets/authelia/session_secret
 
+  lldap_jwt_secret:
+    file: ./secrets/lldap/jwt_secret
   lldap_ldap_user_pass:
     file: ./secrets/lldap/ldap_user_pass
   lldap_key_file:
