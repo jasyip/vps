@@ -21,8 +21,6 @@ secrets:
     environment:
       LLDAP_JWT_SECRET_FILE: /run/secrets/jwt_secret
       LLDAP_LDAP_USER_PASS_FILE: /run/secrets/ldap_user_pass
-    networks:
-      - caddy_lldap
     secrets:
       - source: lldap_jwt_secret
         target: jwt_secret

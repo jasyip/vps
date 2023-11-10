@@ -35,9 +35,6 @@ services:
       - 127.0.0.1:8080:8080
     expose:
       - 6060
-    networks:
-      - caddy_crowdsec
-      - prometheus_crowdsec 
     healthcheck:
       <<: *healthcheck
       test: wget -q --spider localhost:8080/health || exit 1

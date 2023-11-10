@@ -15,11 +15,6 @@ services:
         - "server_prometheus:${VERSION_PROMETHEUS}"
     volumes:
       - prometheus_data:/prometheus
-    networks:
-      - prometheus_caddy
-      - prometheus_crowdsec
-      - prometheus_grafana
-      - prometheus_authelia
     healthcheck:
       <<: *healthcheck
       test: wget -q --spider localhost:9090/-/healthy || exit 1

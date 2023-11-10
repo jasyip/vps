@@ -26,12 +26,6 @@ services:
     ports:
       - 50080:80
       - 50443:443
-    networks:
-      - caddy_crowdsec
-      - caddy_grafana
-      - caddy_authelia
-      - caddy_lldap
-      - prometheus_caddy
     # read_only: true
     network_mode: "slirp4netns:allow_host_loopback=true"
     security_opt:

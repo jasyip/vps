@@ -20,9 +20,6 @@ services:
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
     volumes:
       - authelia_logs:/var/log
-    networks:
-      - caddy_authelia
-      - prometheus_authelia
     healthcheck:
       <<: *healthcheck
       test: /app/healthcheck.sh

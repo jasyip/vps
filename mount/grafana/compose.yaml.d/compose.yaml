@@ -23,9 +23,6 @@ services:
       - grafana_data:/var/lib/grafana
       - grafana_logs:/var/log/grafana
       - /run/postgresql:/var/run/postgresql
-    networks:
-      - caddy_grafana
-      - prometheus_grafana
     healthcheck:
       <<: *healthcheck
       test: wget -q --spider localhost:3000/api/health || exit 1
