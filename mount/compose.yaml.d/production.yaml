@@ -2,4 +2,4 @@ x-restart: &restart
   restart: unless-stopped
 
 include:
-  - compose.yaml.d/main.yaml
+  - compose.yaml.d/compose.yaml

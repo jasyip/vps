@@ -7,7 +7,6 @@ x-healthcheck: &healthcheck
   timeout: 5s
 
 include:
-  - compose.yaml.d/networks.yaml
   - compose.yaml.d/secrets.yaml
   - authelia/compose.yaml.d/${MODE}.yaml
   - caddy/compose.yaml.d/${MODE}.yaml

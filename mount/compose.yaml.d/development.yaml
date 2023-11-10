@@ -1,2 +1,2 @@
 include:
-  - compose.yaml.d/main.yaml
+  - compose.yaml.d/compose.yaml
