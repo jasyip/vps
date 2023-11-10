@@ -1,0 +1,55 @@
+x-restart: &restart
+  {}
+
+x-healthcheck: &healthcheck
+  {}
+
+secrets:
+  lldap:
+    <<: *restart
+    build:
+      context: lldap
+      args:
+        LLDAP_VERSION: "$VERSION_LLDAP"
+      tags:
+        - "server_lldap:${VERSION_LLDAP}"
+    volumes:
+      - lldap_data:/data
+    healthcheck:
+      <<: *healthcheck
+      test: /app/lldap healthcheck --config-file /data/lldap_config.toml
+    environment:
+      LLDAP_JWT_SECRET_FILE: /run/secrets/jwt_secret
+      LLDAP_LDAP_USER_PASS_FILE: /run/secrets/ldap_user_pass
+    networks:
+      - caddy_lldap
+    secrets:
+      - source: lldap_jwt_secret
+        target: jwt_secret
+        mode: 0400
+      - source: lldap_ldap_user_pass
+        target: ldap_user_pass
+        mode: 0400
+    expose:
+      - 3890
+      - 17170
+    network_mode: "slirp4netns:allow_host_loopback=true"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - SETGID
+      - SETUID
+
+secrets:
+  lldap_jwt_secret:
+    file: ./lldap/compose.yaml.d/secrets/lldap/jwt_secret
+  lldap_ldap_user_pass:
+    file: ./lldap/compose.yaml.d/secrets/lldap/ldap_user_pass
+
+volumes:
+  lldap_data:
+    name: server_${MODE}_lldap_data

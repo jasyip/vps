@@ -1,0 +1,2 @@
+include:
+  - crowdsec/compose.yaml.d/compose.yaml

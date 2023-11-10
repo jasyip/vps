@@ -1,0 +1,17 @@
+version: "3"
+
+name: server
+
+x-healthcheck: &healthcheck
+  start_period: 30s
+  timeout: 5s
+
+include:
+  - compose.yaml.d/networks.yaml
+  - compose.yaml.d/secrets.yaml
+  - authelia/compose.yaml.d/${MODE}.yaml
+  - caddy/compose.yaml.d/${MODE}.yaml
+  - crowdsec/compose.yaml.d/${MODE}.yaml
+  - grafana/compose.yaml.d/${MODE}.yaml
+  - lldap/compose.yaml.d/${MODE}.yaml
+  - prometheus/compose.yaml.d/${MODE}.yaml

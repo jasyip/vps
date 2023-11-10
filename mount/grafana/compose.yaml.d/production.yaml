@@ -1,0 +1,9 @@
+include:
+  - grafana/compose.yaml.d/compose.yaml
+
+services:
+  grafana:
+    environment:
+      GF_SERVER_DOMAIN: "${SUBDOMAIN_GRAFANA}.${DOMAIN}"
+    depends_on:
+      - prometheus

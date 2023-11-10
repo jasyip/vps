@@ -1,0 +1,34 @@
+x-restart: &restart
+  {}
+
+x-healthcheck: &healthcheck
+  {}
+
+services:
+  prometheus:
+    <<: *restart
+    build:
+      context: prometheus
+      args:
+        PROMETHEUS_VERSION: "$VERSION_PROMETHEUS"
+      tags:
+        - "server_prometheus:${VERSION_PROMETHEUS}"
+    volumes:
+      - prometheus_data:/prometheus
+    networks:
+      - prometheus_caddy
+      - prometheus_crowdsec
+      - prometheus_grafana
+      - prometheus_authelia
+    healthcheck:
+      <<: *healthcheck
+      test: wget -q --spider localhost:9090/-/healthy || exit 1
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  prometheus_data:
+    name: server_${MODE}_prometheus_data

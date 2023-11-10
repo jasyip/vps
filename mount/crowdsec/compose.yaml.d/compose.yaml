@@ -1,0 +1,58 @@
+x-restart: &restart
+  {}
+
+x-healthcheck: &healthcheck
+  {}
+
+services:
+  crowdsec:
+    <<: *restart
+    build:
+      context: crowdsec
+      args:
+        CROWDSEC_VERSION: "$VERSION_CROWDSEC"
+      tags:
+        - "server_crowdsec:${VERSION_CROWDSEC}"
+    environment:
+      COLLECTIONS: >-
+        crowdsecurity/caddy
+        crowdsecurity/sshd
+      DISABLE_PARSERS: >-
+        crowdsecurity/cri-logs
+        crowdsecurity/docker-logs
+        crowdsecurity/geoip-enrich
+      BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_KEY_CADDY"
+      BOUNCER_KEY_firewall: "$CROWDSEC_BOUNCER_KEY_FIREWALL"
+      POSTGRESQL_PASSWORD: "$POSTGRESQL_PASSWORD_CROWDSEC"
+    volumes:
+      - caddy_logs:/run/log/caddy:ro
+      - /var/log/sshd.log:/run/log/host/sshd.log:ro
+      - crowdsec_config:/etc/crowdsec
+      - crowdsec_data:/var/lib/crowdsec/data
+      - crowdsec_logs:/var/log
+      - /run/postgresql:/var/run/postgresql
+    ports:
+      - 127.0.0.1:8080:8080
+    expose:
+      - 6060
+    networks:
+      - caddy_crowdsec
+      - prometheus_crowdsec 
+    healthcheck:
+      <<: *healthcheck
+      test: wget -q --spider localhost:8080/health || exit 1
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    group_add:
+      - keep-groups
+
+volumes:
+  crowdsec_config:
+    name: server_${MODE}_crowdsec_config
+  crowdsec_data:
+    name: server_${MODE}_crowdsec_data
+  crowdsec_logs:
+    name: server_${MODE}_crowdsec_logs

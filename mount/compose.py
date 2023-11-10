@@ -14,12 +14,19 @@ from collections.abc import Callable, Iterable, Sequence, Set
 from itertools import chain
 from pathlib import Path, PurePath
 from pprint import pformat
+from shutil import which
 from subprocess import DEVNULL, PIPE
 from typing import Any, Final, NoReturn, Optional
 
-_COMPOSE: Final[str] = "podman-compose"
+_COMPOSE_BINARIES: Final[tuple[str, ...]] = ("docker-compose", "podman-compose")
 _SET_METADATA_CMD: Final[tuple[str, ...]] = ("/opt/set-metadata", ".", "server")
-_main_args: Final[tuple[str, ...]] = ("--file=compose.yaml",)
+_RELOAD_COMMANDS: Final[dict[str, Sequence[str]]] = {
+    "caddy": ("exec", "caddy", "reload", "--config", "/etc/caddy/Caddyfile"),
+    "crowdsec": ("kill", "--signal=HUP"),
+    "prometheus": ("kill", "--signal=HUP"),
+}
+
+_main_args: Final[tuple[str, ...]] = tuple()
 _subcommand_args: Final[tuple[str, ...]] = tuple()
 
 _own_parser: Final = ArgumentParser()
@@ -28,21 +35,10 @@ _own_parser.add_argument(
     "--less-opts",
     default="",
     type=shlex.split,
-    help=", ".join(
-        (
-            "options to pass to 'less'",
-            f"which may be invoked depending on provided {_COMPOSE} subcommand",
-        )
-    ),
+    help="options to pass to 'less', which may be invoked depending on provided subcommand",
 )
 
 _logger: Final = logging.getLogger(__name__)
-
-_reload_commands: Final[dict[str, Sequence[str]]] = {
-    "caddy": ("exec", "caddy", "reload", "--config", "/etc/caddy/Caddyfile"),
-    "crowdsec": ("kill", "--signal=HUP"),
-    "prometheus": ("kill", "--signal=HUP"),
-}
 
 
 def _first_ind(
@@ -94,8 +90,23 @@ def main() -> NoReturn:
     subcommand: Final[str] = sys.argv[_subcommand_ind]
     _logger.debug(f"{subcommand=}")
 
+    _compose: str
+    match tuple(map(bool, map(which, _COMPOSE_BINARIES))):
+        case (True, _):
+            _compose = "docker-compose"
+            os.environ.setdefault(
+                "DOCKER_HOST",
+                "unix://{}/podman/podman.sock".format(
+                    os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{os.getuid()}")
+                ),
+            )
+        case (False, True):
+            _compose = "podman-compose"
+        case _:
+            raise RuntimeError(" and ".join(_COMPOSE_BINARIES) + " are not present")
+
     def command(*args) -> tuple[str, ...]:
-        output: Final[list[str]] = [_COMPOSE]
+        output: Final[list[str]] = [_compose]
         output.extend(chain.from_iterable(main_args))
         if args:
             laid_args: Final[list[str]] = []
@@ -181,13 +192,13 @@ def main() -> NoReturn:
             service = container["Labels"]["com.docker.compose.service"]
             if (
                 container["State"] in {"dead", "exited"}
-                or service not in _reload_commands
+                or service not in _RELOAD_COMMANDS
                 or (specific_containers and service not in specific_containers)
             ):
                 _logger.debug(f"NOT reloading service '{service}'")
                 continue
 
-            reload_command: tuple[str, ...] = tuple(_reload_commands[service])
+            reload_command: tuple[str, ...] = tuple(_RELOAD_COMMANDS[service])
             main_reload_command_ind: int = _first_ind(reload_command)
 
             final_reload_command: list[str] = []
@@ -234,7 +245,9 @@ def main() -> NoReturn:
                     )
                 )
             )
-            error_codes: Final[Set[int]] = frozenset(filter(None, reload_statuses.values()))
+            error_codes: Final[Set[int]] = frozenset(
+                filter(None, reload_statuses.values())
+            )
             sys.exit(next(iter(error_codes)) if len(error_codes) == 1 else 1)
         else:
             _logger.info(
@@ -253,7 +266,7 @@ def main() -> NoReturn:
 
     if "--help" not in chain.from_iterable(chain(main_args, subcommand_args)):
         match subcommand:
-            case "logs":
+            case "logs" | "config":
                 _logger.info("Will pipe command stdout and stderr to 'less'")
                 sys.stdout.flush()
                 sys.stderr.flush()

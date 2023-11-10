@@ -1,0 +1,42 @@
+x-restart: &restart
+  {}
+
+x-healthcheck: &healthcheck
+  {}
+
+services:
+  grafana:
+    <<: *restart
+    build:
+      context: grafana
+      args:
+        GRAFANA_VERSION: "$VERSION_GRAFANA"
+      tags:
+        - "server_grafana:${VERSION_GRAFANA}"
+    secrets:
+      - source: postgresql_password_grafana
+        target: postgresql_password
+        mode: 0400
+    expose:
+      - 3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - grafana_logs:/var/log/grafana
+      - /run/postgresql:/var/run/postgresql
+    networks:
+      - caddy_grafana
+      - prometheus_grafana
+    healthcheck:
+      <<: *healthcheck
+      test: wget -q --spider localhost:3000/api/health || exit 1
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  grafana_data:
+    name: server_${MODE}_grafana_data
+  grafana_logs:
+    name: server_${MODE}_grafana_logs

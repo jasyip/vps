@@ -1,0 +1,11 @@
+networks:
+
+  caddy_crowdsec:
+  caddy_grafana:
+  caddy_authelia:
+  caddy_lldap:
+
+  prometheus_caddy:
+  prometheus_crowdsec:
+  prometheus_grafana:
+  prometheus_authelia:

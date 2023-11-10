@@ -1,0 +1,2 @@
+include:
+  - prometheus/compose.yaml.d/compose.yaml

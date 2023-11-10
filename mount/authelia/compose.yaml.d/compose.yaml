@@ -1,0 +1,64 @@
+x-restart: &restart
+  {}
+
+x-healthcheck: &healthcheck
+  {}
+
+services:
+  authelia:
+    <<: *restart
+    build:
+      context: authelia
+      args:
+        AUTHELIA_VERSION: "$VERSION_AUTHELIA"
+      tags:
+        - "server_authelia:${VERSION_AUTHELIA}"
+    environment:
+      AUTHELIA_JWT_SECRET_FILE: /run/secrets/jwt_secret
+      AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
+      AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/storage_encryption_key
+      AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
+    volumes:
+      - authelia_logs:/var/log
+    networks:
+      - caddy_authelia
+      - prometheus_authelia
+    healthcheck:
+      <<: *healthcheck
+      test: /app/healthcheck.sh
+    secrets:
+      - source: authelia_jwt_secret
+        target: jwt_secret
+        mode: 0400
+      - source: postgresql_password_authelia
+        target: postgresql_password
+        mode: 0400
+      - source: authelia_storage_encryption_key
+        target: storage_encryption_key
+        mode: 0400
+      - source: authelia_session_secret
+        target: session_secret
+        mode: 0400
+    expose:
+      - 9091
+      - 9959
+    network_mode: "slirp4netns:allow_host_loopback=true"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+
+secrets:
+  authelia_jwt_secret:
+    file: ./authelia/compose.yaml.d/secrets/jwt_secret
+  authelia_storage_encryption_key:
+    file: ./authelia/compose.yaml.d/secrets/storage_encryption_key
+  authelia_session_secret:
+    file: ./authelia/compose.yaml.d/secrets/session_secret
+
+volumes:
+  authelia_logs:
+    name: server_${MODE}_authelia_logs

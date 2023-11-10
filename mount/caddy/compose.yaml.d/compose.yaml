@@ -1,0 +1,50 @@
+x-restart: &restart
+  {}
+
+services:
+  caddy:
+    <<: *restart
+    build:
+      context: caddy
+      args:
+        CADDY_VERSION: "$VERSION_CADDY"
+        CROWDSEC_BOUNCER_VERSION: "$VERSION_CADDY_CROWDSEC_BOUNCER"
+        DNS_IP_RANGE_VERSION: "$VERSION_CADDY_DNS_IP_RANGE"
+        POSTGRES_STORAGE_VERSION: "$VERSION_CADDY_POSTGRES_STORAGE"
+      tags:
+        - "server_caddy:${VERSION_CADDY}"
+    environment:
+      CROWDSEC_BOUNCER_KEY: "$CROWDSEC_BOUNCER_KEY_CADDY"
+      SUBDOMAIN_GRAFANA: "$SUBDOMAIN_GRAFANA"
+      POSTGRESQL_PASSWORD: "$POSTGRESQL_PASSWORD_CADDY"
+    volumes:
+      - caddy_logs:/var/log/caddy
+      - caddy_data:/data
+      - caddy_pseudo_config:/config
+    expose:
+      - 2019
+    ports:
+      - 50080:80
+      - 50443:443
+    networks:
+      - caddy_crowdsec
+      - caddy_grafana
+      - caddy_authelia
+      - caddy_lldap
+      - prometheus_caddy
+    # read_only: true
+    network_mode: "slirp4netns:allow_host_loopback=true"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+volumes:
+  caddy_logs:
+    name: server_${MODE}_caddy_logs
+  caddy_data:
+    name: server_${MODE}_caddy_data
+  caddy_pseudo_config:
+    name: server_${MODE}_caddy_pseudo_config

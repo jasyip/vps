@@ -1,0 +1,10 @@
+include:
+  - caddy/compose.yaml.d/compose.yaml
+
+services:
+  caddy:
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./caddy/site:/srv:ro
+    environment:
+      EXTRA_DIRECTIVES: "import development"
