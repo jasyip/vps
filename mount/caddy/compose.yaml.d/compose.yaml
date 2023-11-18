@@ -24,8 +24,8 @@ services:
     expose:
       - 2019
     ports:
-      - 50080:80
-      - 50443:443
+      - 80:80
+      - 443:443
     # read_only: true
     network_mode: "slirp4netns:allow_host_loopback=true"
     security_opt:
