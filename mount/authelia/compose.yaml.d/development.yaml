@@ -8,4 +8,4 @@ services:
       AUTHELIA_DEFAULT_REDIRECTION_URL: "https://${SUBDOMAIN_AUTHELIA}.localhost"
       AUTHELIA_SESSION_DOMAIN: "https://${SUBDOMAIN_AUTHELIA}.localhost"
     volumes:
-      - ../configuration.yml:/config/configuration.yml:ro
+      - ./authelia/configuration.yml:/config/configuration.yml:ro
