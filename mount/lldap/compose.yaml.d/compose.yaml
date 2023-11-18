@@ -4,7 +4,7 @@ x-restart: &restart
 x-healthcheck: &healthcheck
   {}
 
-secrets:
+services:
   lldap:
     <<: *restart
     build:
