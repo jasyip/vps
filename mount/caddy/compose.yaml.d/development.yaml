@@ -7,4 +7,4 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/site:/srv:ro
     environment:
-      EXTRA_DIRECTIVES: "import development"
+      LOCALHOST: "${LOCALHOST:-localhost}"

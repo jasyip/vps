@@ -38,7 +38,7 @@
       expression {labels.2} == "www"
     }
     handle @www {
-      redir https://{labels.1}.{labels.0}{uri}
+      redir `https://{labels.1}.{labels.0}{uri}`
     }
     handle {
       abort
@@ -58,15 +58,19 @@
 
   `{$SUBDOMAIN_GRAFANA}.{args[0]}` {
     forward_auth authelia:9091 {
-      uri /api/verify?rd=https://auth.{args[0]}/
+      uri `/api/verify?rd=https://{$SUBDOMAIN_AUTHELIA}.{args[1]}/`
       copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
     }
 
     reverse_proxy http://grafana:3000
   }
 
-  `auth.{args[0]}` {
+  `{$SUBDOMAIN_AUTHELIA}.{args[0]}` {
     reverse_proxy authelia:9091
+  }
+
+  `{$SUBDOMAIN_LLDAP}.{args[0]}` {
+    reverse_proxy http://lldap:17170
   }
 }
 
@@ -78,10 +82,10 @@
     debug
   }
 
-  import servers localhost
+  import servers localhost `{$LOCALHOST:localhost}`
 
   www.localhost {
-    redir https://localhost{uri}
+    redir `https://localhost{uri}`
   }
 }
 
@@ -101,18 +105,18 @@
       expression {labels.3} == "www"
     }
     handle @www {
-      redir https://{labels.2}.{labels.1}.{labels.0}{uri}
+      redir `https://{labels.2}.{labels.1}.{labels.0}{uri}`
     }
     handle {
       abort
     }
   }
 
-  import servers `{$DOMAIN}`
+  import servers `{$DOMAIN}` `{$DOMAIN}`
 
   *.localhost {
     redir `https://{label1}.{$DOMAIN}{uri}`
   }
 }
 
-{$EXTRA_DIRECTIVES}
+import `{$MODE}`

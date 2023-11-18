@@ -6,7 +6,6 @@ services:
     environment:
       DOMAIN: "$DOMAIN"
       EMAIL: "$EMAIL"
-      EXTRA_DIRECTIVES: "import production"
     depends_on:
       - crowdsec
       - authelia

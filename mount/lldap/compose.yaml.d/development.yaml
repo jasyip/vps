@@ -5,4 +5,4 @@ services:
   lldap:
     environment:
       LLDAP_VERBOSE: "true"
-      LLDAP_HTTP_URL: "https://${SUBDOMAIN_LLDAP}.localhost"
+      LLDAP_HTTP_URL: "https://${SUBDOMAIN_LLDAP}.${LOCALHOST:-localhost}"

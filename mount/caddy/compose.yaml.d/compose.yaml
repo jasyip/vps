@@ -13,8 +13,11 @@ services:
       tags:
         - "server_caddy:${VERSION_CADDY}"
     environment:
+      MODE: "$MODE"
       CROWDSEC_BOUNCER_KEY: "$CROWDSEC_BOUNCER_KEY_CADDY"
       SUBDOMAIN_GRAFANA: "$SUBDOMAIN_GRAFANA"
+      SUBDOMAIN_AUTHELIA: "$SUBDOMAIN_AUTHELIA"
+      SUBDOMAIN_LLDAP: "$SUBDOMAIN_LLDAP"
     volumes:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data

@@ -7,6 +7,6 @@ services:
       - 3000:3000
     environment:
       GF_LOG_LEVEL: debug
-      GF_SERVER_DOMAIN: "${SUBDOMAIN_GRAFANA}.localhost"
+      GF_SERVER_DOMAIN: "${SUBDOMAIN_GRAFANA}.${LOCALHOST:-localhost}"
     volumes:
       - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
