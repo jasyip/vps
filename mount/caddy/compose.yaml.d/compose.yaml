@@ -10,13 +10,11 @@ services:
         CADDY_VERSION: "$VERSION_CADDY"
         CROWDSEC_BOUNCER_VERSION: "$VERSION_CADDY_CROWDSEC_BOUNCER"
         DNS_IP_RANGE_VERSION: "$VERSION_CADDY_DNS_IP_RANGE"
-        POSTGRES_STORAGE_VERSION: "$VERSION_CADDY_POSTGRES_STORAGE"
       tags:
         - "server_caddy:${VERSION_CADDY}"
     environment:
       CROWDSEC_BOUNCER_KEY: "$CROWDSEC_BOUNCER_KEY_CADDY"
       SUBDOMAIN_GRAFANA: "$SUBDOMAIN_GRAFANA"
-      POSTGRESQL_PASSWORD: "$POSTGRESQL_PASSWORD_CADDY"
     volumes:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data
@@ -27,7 +25,6 @@ services:
       - 80:80
       - 443:443
     # read_only: true
-    network_mode: "slirp4netns:allow_host_loopback=true"
     security_opt:
       - no-new-privileges:true
     cap_drop:

@@ -2,15 +2,6 @@
 
   admin unix//run/caddy.sock
 
-  storage postgres {
-    dbname caddy
-    host 10.0.2.2
-    port 5432
-    user caddy
-    sslmode disable
-    disable_ddl false
-  }
-
   servers {
     trusted_proxies dns authelia
     # metrics
