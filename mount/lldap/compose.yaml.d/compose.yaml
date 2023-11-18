@@ -45,9 +45,9 @@ services:
 
 secrets:
   lldap_jwt_secret:
-    file: ./lldap/compose.yaml.d/secrets/lldap/jwt_secret
+    file: ./lldap/compose.yaml.d/secrets/jwt_secret
   lldap_ldap_user_pass:
-    file: ./lldap/compose.yaml.d/secrets/lldap/ldap_user_pass
+    file: ./lldap/compose.yaml.d/secrets/ldap_user_pass
 
 volumes:
   lldap_data:
