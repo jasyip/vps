@@ -28,7 +28,7 @@ services:
       - 80:80/tcp
       - 443:443/tcp
       - 443:443/udp
-    # read_only: true
+    read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
