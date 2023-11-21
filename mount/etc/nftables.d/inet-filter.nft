@@ -2,6 +2,7 @@ table inet filter {
     chain input     {
         type filter hook input priority 0;
         iif eth0 tcp dport {http, https, ssh} accept
+        iif eth0 udp dport https accept
         # ct status dnat accept
     }
     chain forward       { type filter hook forward priority 0; }
