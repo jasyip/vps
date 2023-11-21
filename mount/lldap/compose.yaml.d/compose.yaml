@@ -19,6 +19,8 @@ services:
     volumes:
       - lldap_data:/data
       - /run/postgresql:/var/run/postgresql
+      - type: tmpfs
+        target: /app
     environment:
       LLDAP_JWT_SECRET_FILE: /run/secrets/jwt_secret
       LLDAP_LDAP_USER_PASS_FILE: /run/secrets/ldap_user_pass
@@ -33,6 +35,7 @@ services:
     expose:
       - 3890
       - 17170
+    read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
