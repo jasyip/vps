@@ -62,7 +62,7 @@
       copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
     }
 
-    reverse_proxy http://grafana:3000
+    reverse_proxy grafana:3000
   }
 
   `{$SUBDOMAIN_AUTHELIA}.{args[0]}` {
@@ -70,7 +70,7 @@
   }
 
   `{$SUBDOMAIN_LLDAP}.{args[0]}` {
-    reverse_proxy http://lldap:17170
+    reverse_proxy lldap:17170
   }
 }
 
