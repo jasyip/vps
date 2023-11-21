@@ -14,3 +14,7 @@ include:
   - grafana/compose.yaml.d/${MODE}.yaml
   - lldap/compose.yaml.d/${MODE}.yaml
   - prometheus/compose.yaml.d/${MODE}.yaml
+
+networks:
+  default:
+    enable_ipv6: true
