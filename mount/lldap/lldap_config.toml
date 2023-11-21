@@ -85,7 +85,7 @@
 ##  - "mysql://mysql-user:password@mysql-server/my-database"
 ##
 ## This can be overridden with the LLDAP_DATABASE_URL env variable.
-database_url = "postgresql:///lldap:${POSTGRESQL_PASSWORD}@10.0.2.2/lldap"
+# database_url = "postgresql://lldap:${POSTGRESQL_PASSWORD}@10.0.2.2:5432/lldap"
 
 ## Private key file.
 ## Contains the secret private key used to store the passwords safely.
