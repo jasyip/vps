@@ -8,3 +8,4 @@ services:
       - ./caddy/site:/srv:ro
     environment:
       LOCALHOST: "${LOCALHOST:-localhost}"
+      CROWDSEC_BOUNCER_KEY: "$PRODUCTION_CROWDSEC_BOUNCER_KEY_CADDY"

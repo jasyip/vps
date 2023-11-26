@@ -1,2 +1,8 @@
 include:
   - crowdsec/compose.yaml.d/compose.yaml
+
+services:
+  crowdsec:
+    environment:
+      POSTGRESQL_PASSWORD: "$DEVELOPMENT_CROWDSEC_POSTGRESQL_PASSWORD"
+

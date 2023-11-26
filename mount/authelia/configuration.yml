@@ -37,9 +37,7 @@ authentication_backend:
 
 storage:
   postgres:
-    host: 10.0.2.2
-    database: authelia
-    username: authelia
+    host: /var/run/postgresql
 
 notifier:
   filesystem:

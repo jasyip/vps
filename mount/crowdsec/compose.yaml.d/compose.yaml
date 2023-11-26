@@ -23,14 +23,14 @@ services:
         crowdsecurity/geoip-enrich
       BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_KEY_CADDY"
       BOUNCER_KEY_firewall: "$CROWDSEC_BOUNCER_KEY_FIREWALL"
-      POSTGRESQL_PASSWORD: "$POSTGRESQL_PASSWORD_CROWDSEC"
+      MODE: "$MODE"
     volumes:
       - caddy_logs:/run/log/caddy:ro
       - /var/log/sshd.log:/run/log/host/sshd.log:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
       - crowdsec_logs:/var/log
-      - /run/postgresql:/var/run/postgresql
+      - /run/postgresql:/run/postgresql
     ports:
       - 127.0.0.1:8080:8080
     expose:

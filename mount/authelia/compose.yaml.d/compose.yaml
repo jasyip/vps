@@ -15,11 +15,14 @@ services:
         - "server_authelia:${VERSION_AUTHELIA}"
     environment:
       AUTHELIA_JWT_SECRET_FILE: /run/secrets/jwt_secret
+      AUTHELIA_STORAGE_POSTGRES_DATABASE: "${MODE}_authelia"
+      AUTHELIA_STORAGE_POSTGRES_USERNAME: "${MODE}_authelia"
       AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/storage_encryption_key
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
     volumes:
       - authelia_logs:/var/log
+      - /run/postgresql:/var/run/postgresql
     healthcheck:
       <<: *healthcheck
       test: /app/healthcheck.sh
@@ -27,7 +30,7 @@ services:
       - source: authelia_jwt_secret
         target: jwt_secret
         mode: 0400
-      - source: postgresql_password_authelia
+      - source: authelia_postgresql_password
         target: postgresql_password
         mode: 0400
       - source: authelia_storage_encryption_key
@@ -39,7 +42,7 @@ services:
     expose:
       - 9091
       - 9959
-    network_mode: "slirp4netns:allow_host_loopback=true"
+    # network_mode: "slirp4netns:allow_host_loopback=true"
     read_only: true
     security_opt:
       - no-new-privileges:true
@@ -50,11 +53,13 @@ services:
 
 secrets:
   authelia_jwt_secret:
-    file: ./authelia/compose.yaml.d/secrets/jwt_secret
+    file: ./authelia/compose.yaml.d/secrets/${MODE}/jwt_secret
+  authelia_postgresql_password:
+    file: ./authelia/compose.yaml.d/secrets/${MODE}/postgresql_password
   authelia_storage_encryption_key:
-    file: ./authelia/compose.yaml.d/secrets/storage_encryption_key
+    file: ./authelia/compose.yaml.d/secrets/${MODE}/storage_encryption_key
   authelia_session_secret:
-    file: ./authelia/compose.yaml.d/secrets/session_secret
+    file: ./authelia/compose.yaml.d/secrets/${MODE}/session_secret
 
 volumes:
   authelia_logs:

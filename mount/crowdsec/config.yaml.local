@@ -3,7 +3,7 @@ crowdsec_service:
 
 db_config:
   type: pgx
-  db_path: /var/run/postgresql
-  user: crowdsec
+  db_path: /run/postgresql
+  user: ${MODE}_crowdsec
   password: ${POSTGRESQL_PASSWORD}
-  db_name: crowdsec
+  db_name: ${MODE}_crowdsec

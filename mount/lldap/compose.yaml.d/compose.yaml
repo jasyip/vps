@@ -18,13 +18,13 @@ services:
       test: /app/lldap healthcheck --config-file /data/lldap_config.toml
     volumes:
       - lldap_data:/data
-      - /run/postgresql:/var/run/postgresql
+      - /run/postgresql:/run/postgresql
       - type: tmpfs
         target: /app
     environment:
       LLDAP_JWT_SECRET_FILE: /run/secrets/jwt_secret
       LLDAP_LDAP_USER_PASS_FILE: /run/secrets/ldap_user_pass
-      LLDAP_DATABASE_URL: "postgresql://lldap:${POSTGRESQL_PASSWORD_LLDAP}@%2Fvar%2Frun%2Fpostgresql/lldap"
+      LLDAP_DATABASE_URL: "postgres://${MODE}_lldap:${POSTGRESQL_PASSWORD_LLDAP}@%2Frun%2Fpostgresql/${MODE}_lldap"
     secrets:
       - source: lldap_jwt_secret
         target: jwt_secret
