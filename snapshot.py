@@ -114,7 +114,7 @@ def latest_snapshot(backing: PathLike) -> Path:
     if latest_snapshot is not None:
         return latest_snapshot.path
     new_path: Final[Path] = backing.with_name(f"{backing.stem}_1.qcow2")
-    _create_snapshot(backing, new_path)
+    _create_snapshot(backing, new_path, source_fmt=backing.suffix.removeprefix("."))
     return new_path
 
 
