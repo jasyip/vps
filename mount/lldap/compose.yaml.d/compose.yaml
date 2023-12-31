@@ -23,10 +23,8 @@ services:
     secrets:
       - source: lldap_jwt_secret
         target: jwt_secret
-        mode: 0400
       - source: lldap_ldap_user_pass
         target: ldap_user_pass
-        mode: 0400
     read_only: true
     security_opt:
       - no-new-privileges:true

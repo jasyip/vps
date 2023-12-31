@@ -12,7 +12,6 @@ services:
     secrets:
       - source: grafana_postgresql_password
         target: postgresql_password
-        mode: 0400
     environment:
       MODE: "$MODE"
     volumes:

@@ -24,16 +24,12 @@ services:
     secrets:
       - source: authelia_jwt_secret
         target: jwt_secret
-        mode: 0400
       - source: authelia_postgresql_password
         target: postgresql_password
-        mode: 0400
       - source: authelia_storage_encryption_key
         target: storage_encryption_key
-        mode: 0400
       - source: authelia_session_secret
         target: session_secret
-        mode: 0400
     # network_mode: "slirp4netns:allow_host_loopback=true"
     read_only: true
     security_opt:
