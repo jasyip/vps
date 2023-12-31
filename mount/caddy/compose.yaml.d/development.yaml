@@ -5,7 +5,10 @@ services:
       service: common
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./caddy/site:/srv:ro
+      - type: bind
+        source: ../site
+        target: /srv
+        read_only: true
     environment:
       LOCALHOST: "${LOCALHOST:-localhost}"
       CROWDSEC_BOUNCER_KEY: "$PRODUCTION_CROWDSEC_BOUNCER_KEY_CADDY"

@@ -18,7 +18,9 @@ services:
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
     volumes:
       - authelia_logs:/var/log
-      - /run/postgresql:/var/run/postgresql
+      - type: bind
+        source: /run/postgresql
+        target: /run/postgresql
     secrets:
       - source: authelia_jwt_secret
         target: jwt_secret

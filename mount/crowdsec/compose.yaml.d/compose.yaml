@@ -22,11 +22,16 @@ services:
       MODE: "$MODE"
     volumes:
       - caddy_logs:/run/log/caddy:ro
-      - /var/log/sshd.log:/run/log/host/sshd.log:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
       - crowdsec_logs:/var/log
-      - /run/postgresql:/run/postgresql
+      - type: bind
+        source: /var/log/sshd.log
+        target: /run/log/host/sshd.log
+        read_only: true
+      - type: bind
+        source: /run/postgresql
+        target: /run/postgresql
     ports:
       - 127.0.0.1:8080:8080
     read_only: true

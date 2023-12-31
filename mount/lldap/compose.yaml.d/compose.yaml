@@ -11,7 +11,9 @@ services:
         - "server_lldap:${VERSION_LLDAP}"
     volumes:
       - lldap_data:/data
-      - /run/postgresql:/run/postgresql
+      - type: bind
+        source: /run/postgresql
+        target: /run/postgresql
       - type: tmpfs
         target: /app
     environment:
