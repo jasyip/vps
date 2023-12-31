@@ -1,6 +1,7 @@
 ARG CROWDSEC_VERSION
 FROM crowdsecurity/crowdsec:${CROWDSEC_VERSION}
 
+EXPOSE 6060
 HEALTHCHECK CMD wget -q --spider localhost:8080/health || exit 1
 
 COPY ./config.yaml.local /etc/crowdsec/

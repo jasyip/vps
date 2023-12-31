@@ -29,10 +29,6 @@ services:
       - /run/postgresql:/run/postgresql
     ports:
       - 127.0.0.1:8080:8080
-    expose:
-      - 6060
-    healthcheck:
-      test: wget -q --spider localhost:8080/health || exit 1
     read_only: true
     security_opt:
       - no-new-privileges:true

@@ -11,8 +11,6 @@ services:
         - "server_prometheus:${VERSION_PROMETHEUS}"
     volumes:
       - prometheus_data:/prometheus
-    healthcheck:
-      test: wget -q --spider localhost:9090/-/healthy || exit 1
     read_only: true
     security_opt:
       - no-new-privileges:true

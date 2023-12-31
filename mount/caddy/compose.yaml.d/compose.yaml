@@ -20,8 +20,6 @@ services:
       - caddy_logs:/var/log/caddy
       - caddy_data:/data
       - caddy_pseudo_config:/config
-    expose:
-      - 2019
     ports:
       - 80:80/tcp
       - 443:443/tcp

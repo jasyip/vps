@@ -9,8 +9,6 @@ services:
         LLDAP_VERSION: "$VERSION_LLDAP"
       tags:
         - "server_lldap:${VERSION_LLDAP}"
-    healthcheck:
-      test: /app/lldap healthcheck --config-file /data/lldap_config.toml
     volumes:
       - lldap_data:/data
       - /run/postgresql:/run/postgresql
@@ -27,9 +25,6 @@ services:
       - source: lldap_ldap_user_pass
         target: ldap_user_pass
         mode: 0400
-    expose:
-      - 3890
-      - 17170
     read_only: true
     security_opt:
       - no-new-privileges:true

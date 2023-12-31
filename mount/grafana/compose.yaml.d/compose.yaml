@@ -13,16 +13,12 @@ services:
       - source: grafana_postgresql_password
         target: postgresql_password
         mode: 0400
-    expose:
-      - 3000
     environment:
       MODE: "$MODE"
     volumes:
       - grafana_data:/var/lib/grafana
       - grafana_logs:/var/log/grafana
       - /run/postgresql:/run/postgresql
-    healthcheck:
-      test: wget -q --spider localhost:3000/api/health || exit 1
     read_only: true
     security_opt:
       - no-new-privileges:true

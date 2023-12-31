@@ -19,8 +19,6 @@ services:
     volumes:
       - authelia_logs:/var/log
       - /run/postgresql:/var/run/postgresql
-    healthcheck:
-      test: /app/healthcheck.sh
     secrets:
       - source: authelia_jwt_secret
         target: jwt_secret
@@ -34,9 +32,6 @@ services:
       - source: authelia_session_secret
         target: session_secret
         mode: 0400
-    expose:
-      - 9091
-      - 9959
     # network_mode: "slirp4netns:allow_host_loopback=true"
     read_only: true
     security_opt:
