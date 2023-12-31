@@ -1,14 +1,10 @@
-x-restart: &restart
-  {}
-
-x-healthcheck: &healthcheck
-  {}
-
 services:
   grafana:
-    <<: *restart
+    extends:
+      file: ${MODE}.yaml
+      service: grafana
     build:
-      context: grafana
+      context: ..
       args:
         GRAFANA_VERSION: "$VERSION_GRAFANA"
       tags:
@@ -26,7 +22,6 @@ services:
       - grafana_logs:/var/log/grafana
       - /run/postgresql:/run/postgresql
     healthcheck:
-      <<: *healthcheck
       test: wget -q --spider localhost:3000/api/health || exit 1
     read_only: true
     security_opt:

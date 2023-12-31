@@ -1,14 +1,10 @@
-x-restart: &restart
-  {}
-
-x-healthcheck: &healthcheck
-  {}
-
 services:
   authelia:
-    <<: *restart
+    extends:
+      file: ${MODE}.yaml
+      service: authelia
     build:
-      context: authelia
+      context: ..
       args:
         AUTHELIA_VERSION: "$VERSION_AUTHELIA"
       tags:
@@ -24,7 +20,6 @@ services:
       - authelia_logs:/var/log
       - /run/postgresql:/var/run/postgresql
     healthcheck:
-      <<: *healthcheck
       test: /app/healthcheck.sh
     secrets:
       - source: authelia_jwt_secret

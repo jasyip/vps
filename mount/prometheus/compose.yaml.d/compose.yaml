@@ -1,14 +1,10 @@
-x-restart: &restart
-  {}
-
-x-healthcheck: &healthcheck
-  {}
-
 services:
   prometheus:
-    <<: *restart
+    extends:
+      file: ${MODE}.yaml
+      service: prometheus
     build:
-      context: prometheus
+      context: ..
       args:
         PROMETHEUS_VERSION: "$VERSION_PROMETHEUS"
       tags:
@@ -16,7 +12,6 @@ services:
     volumes:
       - prometheus_data:/prometheus
     healthcheck:
-      <<: *healthcheck
       test: wget -q --spider localhost:9090/-/healthy || exit 1
     read_only: true
     security_opt:

@@ -1,14 +1,10 @@
-x-restart: &restart
-  {}
-
-x-healthcheck: &healthcheck
-  {}
-
 services:
   crowdsec:
-    <<: *restart
+    extends:
+      file: ${MODE}.yaml
+      service: crowdsec 
     build:
-      context: crowdsec
+      context: ..
       args:
         CROWDSEC_VERSION: "$VERSION_CROWDSEC"
       tags:
@@ -36,7 +32,6 @@ services:
     expose:
       - 6060
     healthcheck:
-      <<: *healthcheck
       test: wget -q --spider localhost:8080/health || exit 1
     read_only: true
     security_opt:

@@ -1,8 +1,8 @@
-include:
-  - caddy/compose.yaml.d/compose.yaml
-
 services:
   caddy:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common
     volumes:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - ./caddy/site:/srv:ro

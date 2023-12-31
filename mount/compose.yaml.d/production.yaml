@@ -1,5 +1,3 @@
-x-restart: &restart
-  restart: unless-stopped
-
-include:
-  - compose.yaml.d/compose.yaml
+services:
+  common:
+    restart: unless-stopped

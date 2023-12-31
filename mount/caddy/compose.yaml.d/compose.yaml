@@ -1,11 +1,10 @@
-x-restart: &restart
-  {}
-
 services:
   caddy:
-    <<: *restart
+    extends:
+      file: ${MODE}.yaml
+      service: caddy
     build:
-      context: caddy
+      context: ..
       args:
         CADDY_VERSION: "$VERSION_CADDY"
         CROWDSEC_BOUNCER_VERSION: "$VERSION_CADDY_CROWDSEC_BOUNCER"

@@ -1,8 +1,8 @@
-include:
-  - compose.yaml
-
 services:
   caddy:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common
     environment:
       DOMAIN: "$DOMAIN"
       EMAIL: "$EMAIL"

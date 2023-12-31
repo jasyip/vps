@@ -1,2 +1,2 @@
-include:
-  - compose.yaml.d/compose.yaml
+services:
+  common:

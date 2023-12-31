@@ -1,7 +1,7 @@
-include:
-  - lldap/compose.yaml.d/compose.yaml
-
 services:
   lldap:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common
     environment:
       LLDAP_HTTP_URL: "https://${SUBDOMAIN_LLDAP}.${DOMAIN}"

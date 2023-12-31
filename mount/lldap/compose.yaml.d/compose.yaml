@@ -1,20 +1,15 @@
-x-restart: &restart
-  {}
-
-x-healthcheck: &healthcheck
-  {}
-
 services:
   lldap:
-    <<: *restart
+    extends:
+      file: ${MODE}.yaml
+      service: lldap
     build:
-      context: lldap
+      context: ..
       args:
         LLDAP_VERSION: "$VERSION_LLDAP"
       tags:
         - "server_lldap:${VERSION_LLDAP}"
     healthcheck:
-      <<: *healthcheck
       test: /app/lldap healthcheck --config-file /data/lldap_config.toml
     volumes:
       - lldap_data:/data
