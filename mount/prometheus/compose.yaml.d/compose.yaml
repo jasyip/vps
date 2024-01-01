@@ -8,7 +8,7 @@ services:
       args:
         PROMETHEUS_VERSION: "$VERSION_PROMETHEUS"
       tags:
-        - "server_prometheus:${VERSION_PROMETHEUS}"
+        - "${COMPOSE_PROJECT_NAME}/prometheus:${VERSION_PROMETHEUS}"
     volumes:
       - prometheus_data:/prometheus
     read_only: true
@@ -19,4 +19,4 @@ services:
 
 volumes:
   prometheus_data:
-    name: server_${MODE}_prometheus_data
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.prometheus.data

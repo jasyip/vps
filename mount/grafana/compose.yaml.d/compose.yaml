@@ -8,7 +8,7 @@ services:
       args:
         GRAFANA_VERSION: "$VERSION_GRAFANA"
       tags:
-        - "server_grafana:${VERSION_GRAFANA}"
+        - "${COMPOSE_PROJECT_NAME}/grafana:${VERSION_GRAFANA}"
     secrets:
       - source: grafana_postgresql_password
         target: postgresql_password
@@ -32,6 +32,6 @@ secrets:
 
 volumes:
   grafana_data:
-    name: server_${MODE}_grafana_data
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.grafana.data
   grafana_logs:
-    name: server_${MODE}_grafana_logs
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.grafana.logs

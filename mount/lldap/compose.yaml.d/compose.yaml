@@ -8,7 +8,7 @@ services:
       args:
         LLDAP_VERSION: "$VERSION_LLDAP"
       tags:
-        - "server_lldap:${VERSION_LLDAP}"
+        - "${COMPOSE_PROJECT_NAME}/lldap:${VERSION_LLDAP}"
     volumes:
       - lldap_data:/data
       - type: bind
@@ -44,4 +44,4 @@ secrets:
 
 volumes:
   lldap_data:
-    name: server_${MODE}_lldap_data
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.lldap.data
