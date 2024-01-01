@@ -6,7 +6,7 @@ services:
     environment:
       DOMAIN: "$DOMAIN"
       EMAIL: "$EMAIL"
-      CROWDSEC_BOUNCER_KEY: "$PRODUCTION_CROWDSEC_BOUNCER_KEY_CADDY"
+      CROWDSEC_BOUNCER_KEY: "$production_CROWDSEC_BOUNCER_KEY_CADDY"
     depends_on:
       - crowdsec
       - authelia

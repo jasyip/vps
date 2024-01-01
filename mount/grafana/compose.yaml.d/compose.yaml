@@ -26,12 +26,11 @@ services:
     cap_drop:
       - ALL
 
-secrets:
-  grafana_postgresql_password:
-    file: ./grafana/compose.yaml.d/secrets/${MODE}/postgresql_password
-
 volumes:
   grafana_data:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.grafana.data
   grafana_logs:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.grafana.logs
+secrets:
+  grafana_postgresql_password:
+    environment: "${MODE}_POSTGRESQL_PASSWORD_GRAFANA"

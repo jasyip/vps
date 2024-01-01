@@ -41,13 +41,13 @@ services:
 
 secrets:
   authelia_jwt_secret:
-    file: ./authelia/compose.yaml.d/secrets/${MODE}/jwt_secret
+    environment: "${MODE}_AUTHELIA_JWT_SECRET"
   authelia_postgresql_password:
-    file: ./authelia/compose.yaml.d/secrets/${MODE}/postgresql_password
+    environment: "${MODE}_POSTGRESQL_PASSWORD_AUTHELIA"
   authelia_storage_encryption_key:
-    file: ./authelia/compose.yaml.d/secrets/${MODE}/storage_encryption_key
+    environment: "${MODE}_AUTHELIA_STORAGE_ENCRYPTION_KEY"
   authelia_session_secret:
-    file: ./authelia/compose.yaml.d/secrets/${MODE}/session_secret
+    environment: "${MODE}_AUTHELIA_SESSION_SECRET"
 
 volumes:
   authelia_logs:

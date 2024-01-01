@@ -17,7 +17,6 @@ services:
         crowdsecurity/cri-logs
         crowdsecurity/docker-logs
         crowdsecurity/geoip-enrich
-      BOUNCER_KEY_caddy: "$CROWDSEC_BOUNCER_KEY_CADDY"
       BOUNCER_KEY_firewall: "$CROWDSEC_BOUNCER_KEY_FIREWALL"
       MODE: "$MODE"
     volumes:

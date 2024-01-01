@@ -6,3 +6,4 @@ services:
     environment:
       LLDAP_VERBOSE: "true"
       LLDAP_HTTP_URL: "https://${SUBDOMAIN_LLDAP}.${LOCALHOST:-localhost}"
+      LLDAP_DATABASE_URL: "postgres://${MODE}_lldap:${development_POSTGRESQL_PASSWORD_LLDAP}@%2Frun%2Fpostgresql/${MODE}_lldap"

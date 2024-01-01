@@ -4,5 +4,5 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     environment:
-      POSTGRESQL_PASSWORD: "$DEVELOPMENT_CROWDSEC_POSTGRESQL_PASSWORD"
-
+      POSTGRESQL_PASSWORD: "$development_POSTGRESQL_PASSWORD_CROWDSEC"
+      BOUNCER_KEY_caddy: "$development_CROWDSEC_BOUNCER_KEY_CADDY"

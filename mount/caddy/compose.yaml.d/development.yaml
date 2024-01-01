@@ -11,4 +11,4 @@ services:
         read_only: true
     environment:
       LOCALHOST: "${LOCALHOST:-localhost}"
-      CROWDSEC_BOUNCER_KEY: "$PRODUCTION_CROWDSEC_BOUNCER_KEY_CADDY"
+      CROWDSEC_BOUNCER_KEY: "$development_CROWDSEC_BOUNCER_KEY_CADDY"

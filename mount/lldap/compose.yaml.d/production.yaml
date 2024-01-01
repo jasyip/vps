@@ -5,3 +5,4 @@ services:
       service: common
     environment:
       LLDAP_HTTP_URL: "https://${SUBDOMAIN_LLDAP}.${DOMAIN}"
+      LLDAP_DATABASE_URL: "postgres://${MODE}_lldap:${production_POSTGRESQL_PASSWORD_LLDAP}@%2Frun%2Fpostgresql/${MODE}_lldap"
