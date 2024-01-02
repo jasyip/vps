@@ -14,14 +14,53 @@
     # disable_streaming
     # enable_hard_fails
   }
+
+  order crowdsec before respond
 }
 
+(authelia_forward) {
+  forward_auth authelia:9091 {
+    uri `/api/verify?rd=https://{$SUBDOMAIN_AUTHELIA}.{args[0]}{$REDIRECTION_AUTHORITY_SUFFIX}/`
+    copy_headers Authorization Proxy-Authorization Remote-User Remote-Groups Remote-Email Remote-Name
+  }
+}
+(public_server) {
+  log {
+    output file `/var/log/caddy/{args[0]}public_access.log`
+  }
+
+  crowdsec
+  file_server
+}
+
+(grafana_server) {
+  log {
+    output file `/var/log/caddy/{args[0]}grafana_access.log`
+  }
+  reverse_proxy grafana:3000
+}
+
+(authelia_server) {
+  log {
+    output file `/var/log/caddy/{args[0]}authelia_access.log`
+  }
+  crowdsec
+  reverse_proxy authelia:9091
+}
+
+(lldap_server) {
+  log {
+    output file `/var/log/caddy/{args[0]}lldap_access.log`
+  }
+  crowdsec
+  reverse_proxy lldap:17170
+}
 
 (servers) {
 
   :2019 {
     @metrics {
-      remote_ip private_ranges
+      remote_ip 10.89.0.0/24
       path /metrics
     }
 
@@ -33,44 +72,26 @@
     }
   }
 
-  *.*.* {
-    @www {
-      expression {labels.2} == "www"
-    }
-    handle @www {
-      redir `https://{labels.1}.{labels.0}{uri}`
-    }
-    handle {
-      abort
-    }
+  `www.{$DOMAIN}` {
+    redir `https://{$DOMAIN}{$REDIRECTION_AUTHORITY_SUFFIX}{uri}` permanent
   }
 
-  {args[0]} {
-    log {
-      output file /var/log/caddy/public_access.log
-    }
 
-    route {
-      crowdsec
-      file_server
-    }
+  `{$DOMAIN}` {
+    import public_server
   }
 
-  `{$SUBDOMAIN_GRAFANA}.{args[0]}` {
-    forward_auth authelia:9091 {
-      uri `/api/verify?rd=https://{$SUBDOMAIN_AUTHELIA}.{args[1]}/`
-      copy_headers Remote-User Remote-Groups Remote-Name Remote-Email
-    }
-
-    reverse_proxy grafana:3000
+  `{$SUBDOMAIN_GRAFANA}.{$DOMAIN}` {
+    # import authelia_forward `{$DOMAIN}`
+    import grafana_server
   }
 
-  `{$SUBDOMAIN_AUTHELIA}.{args[0]}` {
-    reverse_proxy authelia:9091
+  `{$SUBDOMAIN_AUTHELIA}.{$DOMAIN}` {
+    import authelia_server
   }
 
-  `{$SUBDOMAIN_LLDAP}.{args[0]}` {
-    reverse_proxy lldap:17170
+  `{$SUBDOMAIN_LLDAP}.{$DOMAIN}` {
+    import lldap_server
   }
 }
 
@@ -80,12 +101,28 @@
   {
     import global
     debug
+
+    local_certs
   }
 
-  import servers localhost `{$LOCALHOST:localhost}`
+  import servers
 
-  www.localhost {
-    redir `https://localhost{uri}`
+  *.*.*.* {
+    @www expression {labels.3} == "www" && {labels.1} + "." + {labels.0} == "{$DOMAIN}"
+    handle @www {
+      redir `https://{labels.2}.{$DOMAIN}{uri}` permanent
+    }
+    handle {
+      abort
+    }
+  }
+
+  localhost {
+    redir `https://{$DOMAIN}{$REDIRECTION_AUTHORITY_SUFFIX}{uri}`
+  }
+
+  *.localhost {
+    redir `https://{labels.1}.{$DOMAIN}{$REDIRECTION_AUTHORITY_SUFFIX}{uri}`
   }
 }
 
@@ -94,29 +131,9 @@
     import global
 
     email `{$EMAIL}`
-
-    servers `{$DOMAIN}:443` {
-      name public
-    }
   }
 
-  *.*.*.* {
-    @www {
-      expression {labels.3} == "www"
-    }
-    handle @www {
-      redir `https://{labels.2}.{labels.1}.{labels.0}{uri}`
-    }
-    handle {
-      abort
-    }
-  }
-
-  import servers `{$DOMAIN}` `{$DOMAIN}`
-
-  *.localhost {
-    redir `https://{label1}.{$DOMAIN}{uri}`
-  }
+  import servers
 }
 
 import `{$MODE}`

@@ -10,5 +10,5 @@ services:
         target: /srv
         read_only: true
     environment:
-      LOCALHOST: "${LOCALHOST:-localhost}"
+      REDIRECTION_AUTHORITY_SUFFIX: "$LOCALHOST_REDIRECTION_SUFFIX"
       CROWDSEC_BOUNCER_KEY: "$development_CROWDSEC_BOUNCER_KEY_CADDY"

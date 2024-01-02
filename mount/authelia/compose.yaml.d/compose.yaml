@@ -16,6 +16,9 @@ services:
       AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/storage_encryption_key
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
+      SUBDOMAIN: "$SUBDOMAIN_AUTHELIA"
+      DOMAIN: "$DOMAIN"
+      MODE: "$MODE"
     volumes:
       - authelia_logs:/var/log
       - type: bind

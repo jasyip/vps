@@ -1,9 +1,13 @@
----
 
 theme: dark
 
 log:
   file_path: /var/log/authelia.log
+session:
+  name: "authelia_${MODE}_session"
+  cookies:
+  - domain: "${SUBDOMAIN}.${DOMAIN}"
+    authelia_url: "https://${SUBDOMAIN}.${DOMAIN}${REDIRECTION_AUTHORITY_SUFFIX}"
 
 regulation:
   max_retries: 5

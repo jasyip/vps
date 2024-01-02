@@ -4,7 +4,6 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     environment:
-      DOMAIN: "$DOMAIN"
       EMAIL: "$EMAIL"
       CROWDSEC_BOUNCER_KEY: "$production_CROWDSEC_BOUNCER_KEY_CADDY"
     depends_on:

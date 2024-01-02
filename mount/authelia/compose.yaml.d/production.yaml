@@ -4,7 +4,5 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     environment:
-      AUTHELIA_DEFAULT_REDIRECTION_URL: "${SUBDOMAIN_AUTHELIA}.${DOMAIN}"
-      AUTHELIA_SESSION_DOMAIN: "${SUBDOMAIN_AUTHELIA}.${DOMAIN}"
     depends_on:
       - lldap

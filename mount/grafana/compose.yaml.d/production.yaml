@@ -4,7 +4,5 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     environment:
-      GF_SERVER_DOMAIN: "${SUBDOMAIN_GRAFANA}.${DOMAIN}"
-      GF_SERVER_ROOT_URL: "https://$(domain)s"
     depends_on:
       - prometheus
