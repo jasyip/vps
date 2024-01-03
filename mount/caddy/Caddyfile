@@ -65,6 +65,9 @@
     }
 
     handle @metrics {
+      basicauth {
+        prometheus `{$METRICS_PASSWORD_HASH}`
+      }
       metrics
     }
     handle {

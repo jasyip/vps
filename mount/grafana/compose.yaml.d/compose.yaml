@@ -12,6 +12,8 @@ services:
     secrets:
       - source: grafana_postgresql_password
         target: postgresql_password
+      - source: grafana_metrics_password
+        target: metrics_password
     environment:
       MODE: "$MODE"
       DOMAIN: "$DOMAIN"
@@ -36,3 +38,5 @@ volumes:
 secrets:
   grafana_postgresql_password:
     environment: "${MODE}_POSTGRESQL_PASSWORD_GRAFANA"
+  grafana_metrics_password:
+    environment: "${MODE}_METRICS_PASSWORD_GRAFANA"

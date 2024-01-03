@@ -11,11 +11,22 @@ services:
         - "${COMPOSE_PROJECT_NAME}/prometheus:${VERSION_PROMETHEUS}"
     volumes:
       - prometheus_data:/prometheus
+    secrets:
+      - source: caddy_metrics_password
+        target: metrics_password_caddy
+      - source: grafana_metrics_password
+        target: metrics_password_grafana
     read_only: true
     security_opt:
       - no-new-privileges:true
     cap_drop:
       - ALL
+
+secrets:
+  caddy_metrics_password:
+    environment: "${MODE}_METRICS_PASSWORD_CADDY"
+  grafana_metrics_password:
+    environment: "${MODE}_METRICS_PASSWORD_GRAFANA"
 
 volumes:
   prometheus_data:

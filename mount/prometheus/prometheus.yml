@@ -6,15 +6,19 @@ rule_files:
   - alerts.yml
 
 scrape_configs:
-  - job_name: prometheus
+
+  - job_name: authelia
     static_configs:
     - targets:
-      - localhost:9090
+      - authelia:9959
 
   - job_name: caddy
     static_configs:
     - targets:
       - caddy:2019
+    basic_auth:
+      username: prometheus
+      password_file: /run/secrets/metrics_password_caddy
 
   - job_name: crowdsec
     static_configs:
@@ -25,8 +29,12 @@ scrape_configs:
     static_configs:
     - targets:
       - grafana:3000
+    basic_auth:
+      username: prometheus
+      password_file: /run/secrets/metrics_password_grafana
 
-  - job_name: authelia
+
+  - job_name: prometheus
     static_configs:
     - targets:
-      - authelia:9959
+      - localhost:9090

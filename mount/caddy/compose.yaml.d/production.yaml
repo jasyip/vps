@@ -6,6 +6,7 @@ services:
     environment:
       EMAIL: "$EMAIL"
       CROWDSEC_BOUNCER_KEY: "$production_CROWDSEC_BOUNCER_KEY_CADDY"
+      METRICS_PASSWORD_HASH: "$production_METRICS_PASSWORD_HASH_CADDY"
     depends_on:
       - crowdsec
       - authelia
