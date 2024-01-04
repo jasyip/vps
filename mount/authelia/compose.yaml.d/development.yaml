@@ -5,5 +5,9 @@ services:
       service: common
     environment:
       AUTHELIA_LOG_LEVEL: debug
-    volumes:
-      - ./authelia/configuration.yml:/config/configuration.yml:ro
+    configs:
+      - source: authelia_config
+        target: /etc/authelia.yml
+    ports:
+      - 9091:9091
+      - 9959:9959

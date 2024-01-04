@@ -24,6 +24,8 @@ services:
       - type: bind
         source: /run/postgresql
         target: /run/postgresql
+      - type: tmpfs
+        target: /app
     secrets:
       - source: authelia_jwt_secret
         target: jwt_secret
@@ -40,6 +42,7 @@ services:
     cap_drop:
       - ALL
     cap_add:
+      - SETUID
       - SETGID
 
 secrets:
@@ -55,3 +58,7 @@ secrets:
 volumes:
   authelia_logs:
     name: server_${MODE}_authelia_logs
+configs:
+  authelia_config:
+    file: ../configuration.yml
+    name: ${COMPOSE_PROJECT_NAME}.authelia.config
