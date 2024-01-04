@@ -15,6 +15,7 @@ FROM caddy:${CADDY_VERSION}-alpine
 # VOLUME /config
 VOLUME /data
 
+RUN apk del --no-cache --no-network libcap
 COPY --from=builder /usr/bin/caddy /usr/bin/
 
 
