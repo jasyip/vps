@@ -40,3 +40,8 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.caddy.data
   caddy_pseudo_config:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.caddy.pseudo_config
+
+configs:
+  caddy_caddyfile:
+    file: ../Caddyfile
+    name: ${COMPOSE_PROJECT_NAME}.caddy.caddyfile

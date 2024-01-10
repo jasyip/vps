@@ -4,7 +4,6 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     volumes:
-      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - type: bind
         source: ../site
         target: /srv
@@ -13,3 +12,6 @@ services:
       REDIRECTION_AUTHORITY_SUFFIX: "$LOCALHOST_REDIRECTION_SUFFIX"
       CROWDSEC_BOUNCER_KEY: "$development_CROWDSEC_BOUNCER_KEY_CADDY"
       METRICS_PASSWORD_HASH: "$development_METRICS_PASSWORD_HASH_CADDY"
+    configs:
+      - source: caddy_caddyfile
+        target: /etc/caddy/Caddyfile

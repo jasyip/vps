@@ -35,6 +35,12 @@ volumes:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.grafana.data
   grafana_logs:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.grafana.logs
+
+configs:
+  grafana_config:
+    file: ../grafana.ini
+    name: ${COMPOSE_PROJECT_NAME}.grafana.config
+
 secrets:
   grafana_postgresql_password:
     environment: "${MODE}_POSTGRESQL_PASSWORD_GRAFANA"

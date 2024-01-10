@@ -7,7 +7,7 @@ services:
       - 3000:3000
     environment:
       GF_LOG_LEVEL: debug
-    volumes:
-      - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
       REDIRECTION_AUTHORITY_SUFFIX: "$LOCALHOST_REDIRECTION_SUFFIX"
+    configs:
+      - source: grafana_config
         target: /etc/grafana/grafana.ini
