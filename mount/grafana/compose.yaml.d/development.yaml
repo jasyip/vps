@@ -7,6 +7,7 @@ services:
       - 3000:3000
     environment:
       GF_LOG_LEVEL: debug
+      GF_SERVER_ROUTER_LOGGING: true
       REDIRECTION_AUTHORITY_SUFFIX: "$LOCALHOST_REDIRECTION_SUFFIX"
     configs:
       - source: grafana_config

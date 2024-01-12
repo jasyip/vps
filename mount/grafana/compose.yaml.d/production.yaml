@@ -4,5 +4,6 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     environment:
+      GF_SERVER_ENFORCE_DOMAIN: "true"
     depends_on:
       - prometheus
