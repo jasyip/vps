@@ -27,7 +27,7 @@
 #http_port = 17170
 
 ## The public URL of the server, for password reset links.
-#http_url = "http://lldap.localhost"
+#http_url = "http://localhost"
 
 ## Random secret for JWT signature.
 ## This secret should be random, and should be shared with application
@@ -85,7 +85,7 @@
 ##  - "mysql://mysql-user:password@mysql-server/my-database"
 ##
 ## This can be overridden with the LLDAP_DATABASE_URL env variable.
-# database_url = "postgresql://lldap:${POSTGRESQL_PASSWORD}@10.0.2.2:5432/lldap"
+database_url = "sqlite:///data/users.db?mode=rwc"
 
 ## Private key file.
 ## Contains the secret private key used to store the passwords safely.
@@ -96,7 +96,7 @@
 ## Alternatively, you can use key_seed to override this instead of relying on
 ## a file.
 ## Env variable: LLDAP_KEY_FILE
-#key_file = "/data/private_key"
+key_file = "/data/private_key"
 
 ## Seed to generate the server private key, see key_file above.
 ## This can be any random string, the recommendation is that it's at least 12
@@ -146,4 +146,3 @@
 #cert_file="/data/cert.pem"
 ## Certificate key file.
 #key_file="/data/key.pem"
-

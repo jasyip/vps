@@ -7,3 +7,7 @@ services:
       LLDAP_VERBOSE: "true"
       LLDAP_HTTP_URL: "https://${SUBDOMAIN_LLDAP}.${DOMAIN}${LOCALHOST_REDIRECTION_SUFFIX}"
       LLDAP_DATABASE_URL: "postgres://${MODE}_lldap:${development_POSTGRESQL_PASSWORD_LLDAP}@%2Frun%2Fpostgresql/${MODE}_lldap"
+      LLDAP_LDAP_BASE_DN: "dc=localhost"
+    ports:
+      - 3890:3890
+      - 17170:17170

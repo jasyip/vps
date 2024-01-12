@@ -16,14 +16,14 @@ services:
         target: /run/postgresql
       - type: tmpfs
         target: /app
-    environment:
-      LLDAP_JWT_SECRET_FILE: /run/secrets/jwt_secret
-      LLDAP_LDAP_USER_PASS_FILE: /run/secrets/ldap_admin_password
     secrets:
       - source: lldap_jwt_secret
         target: jwt_secret
       - source: lldap_ldap_admin_password
         target: ldap_admin_password
+    environment:
+      LLDAP_JWT_SECRET_FILE: /run/secrets/jwt_secret
+      LLDAP_LDAP_USER_PASS_FILE: /run/secrets/ldap_admin_password
     read_only: true
     security_opt:
       - no-new-privileges:true
