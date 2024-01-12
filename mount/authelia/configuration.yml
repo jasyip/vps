@@ -1,13 +1,9 @@
-
-theme: dark
-
-log:
-  file_path: /var/log/authelia.log
 session:
   name: "authelia_${MODE}_session"
   cookies:
   - domain: "${SUBDOMAIN}.${DOMAIN}"
     authelia_url: "https://${SUBDOMAIN}.${DOMAIN}${REDIRECTION_AUTHORITY_SUFFIX}"
+  same_site: strict
 
 regulation:
   max_retries: 5
@@ -26,29 +22,31 @@ telemetry:
 
 authentication_backend:
   ldap:
-    implemenation: custom
-    url: ldap://lldap:3890
+    implementation: custom
+    address: ldap://lldap:3890
+    base_dn: "$LDAP_BASE_DN"
+    user: "uid=authelia,ou=people,${LDAP_BASE_DN}"
+    additional_users_dn: ou=people
+    users_filter: "(&(|({username_attribute}={input})(mail_attribute={input}))(objectClass=person)(memberOf=cn=humans,ou=groups,${LDAP_BASE_DN}))"
+    additional_groups_dn: ou=groups
+    groups_filter: "(member={dn})"
+    attributes:
+      username: uid
 
-# access_control:
-#   default_policy: deny
-#   rules:
-#     - domain: public.example.com
-#       policy: bypass
-#     - domain: traefik.example.com
-#       policy: one_factor
-#     - domain: secure.example.com
-#       policy: two_factor
+access_control:
+  default_policy: two_factor
 
 storage:
   postgres:
-    host: /var/run/postgresql
+    address: unix:///run/postgresql
+    database: "${MODE}_authelia"
+    username: "${MODE}_authelia"
 
 notifier:
   filesystem:
-    filename: /config/notification.txt
+    filename: /var/lib/authelia/notifications/notifications.txt
   # smtp:
 
 
 
-...
-
+theme: auto

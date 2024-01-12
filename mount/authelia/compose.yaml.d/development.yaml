@@ -4,7 +4,9 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     environment:
-      AUTHELIA_LOG_LEVEL: debug
+      AUTHELIA_LOG_LEVEL: trace
+      LDAP_BASE_DN: "dc=localhost"
+      REDIRECTION_AUTHORITY_SUFFIX: "$LOCALHOST_REDIRECTION_SUFFIX"
     configs:
       - source: authelia_config
         target: /etc/authelia.yml

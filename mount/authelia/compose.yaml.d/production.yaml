@@ -4,5 +4,6 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     environment:
+      LDAP_BASE_DN: "dc=${DOMAIN_NAME},dc=${TLD}"
     depends_on:
       - lldap

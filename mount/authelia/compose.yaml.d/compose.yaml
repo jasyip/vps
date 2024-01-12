@@ -10,17 +10,17 @@ services:
       tags:
         - "${COMPOSE_PROJECT_NAME}/authelia:${VERSION_AUTHELIA}"
     environment:
-      AUTHELIA_JWT_SECRET_FILE: /run/secrets/jwt_secret
-      AUTHELIA_STORAGE_POSTGRES_DATABASE: "${MODE}_authelia"
-      AUTHELIA_STORAGE_POSTGRES_USERNAME: "${MODE}_authelia"
+      AUTHELIA_IDENTITY_VALIDATION_RESET_PASSWORD_JWT_SECRET_FILE: /run/secrets/jwt_secret
       AUTHELIA_STORAGE_POSTGRES_PASSWORD_FILE: /run/secrets/postgresql_password
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/storage_encryption_key
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
+      AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/ldap_password
+      X_AUTHELIA_CONFIG_FILTERS: expand-env
       SUBDOMAIN: "$SUBDOMAIN_AUTHELIA"
       DOMAIN: "$DOMAIN"
       MODE: "$MODE"
     volumes:
-      - authelia_logs:/var/log
+      - "authelia_notifications:/var/lib/authelia/notifications"
       - type: bind
         source: /run/postgresql
         target: /run/postgresql
@@ -35,6 +35,8 @@ services:
         target: storage_encryption_key
       - source: authelia_session_secret
         target: session_secret
+      - source: authelia_ldap_password
+        target: ldap_password
     # network_mode: "slirp4netns:allow_host_loopback=true"
     read_only: true
     security_opt:
@@ -45,6 +47,10 @@ services:
       - SETUID
       - SETGID
 
+volumes:
+  authelia_notifications:
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.authelia.notifications
+
 secrets:
   authelia_jwt_secret:
     environment: "${MODE}_AUTHELIA_JWT_SECRET"
@@ -54,10 +60,9 @@ secrets:
     environment: "${MODE}_AUTHELIA_STORAGE_ENCRYPTION_KEY"
   authelia_session_secret:
     environment: "${MODE}_AUTHELIA_SESSION_SECRET"
+  authelia_ldap_password:
+    environment: "${MODE}_LDAP_PASSWORD_AUTHELIA"
 
-volumes:
-  authelia_logs:
-    name: server_${MODE}_authelia_logs
 configs:
   authelia_config:
     file: ../configuration.yml
