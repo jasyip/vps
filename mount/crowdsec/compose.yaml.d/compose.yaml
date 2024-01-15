@@ -13,6 +13,7 @@ services:
       COLLECTIONS: >-
         crowdsecurity/caddy
         crowdsecurity/sshd
+        crowdsecurity/whitelist-good-actors
       DISABLE_PARSERS: >-
         crowdsecurity/cri-logs
         crowdsecurity/docker-logs
