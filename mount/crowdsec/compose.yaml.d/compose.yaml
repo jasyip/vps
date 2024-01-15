@@ -39,8 +39,6 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
-    group_add:
-      - keep-groups
 
 volumes:
   crowdsec_config:
