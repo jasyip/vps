@@ -15,3 +15,5 @@ services:
     configs:
       - source: caddy_caddyfile
         target: /etc/caddy/Caddyfile
+      - source: caddy_entrypoint
+        target: /entrypoint.sh

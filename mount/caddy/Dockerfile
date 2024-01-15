@@ -23,3 +23,7 @@ COPY --from=builder /usr/bin/caddy /usr/bin/
 
 COPY Caddyfile /etc/caddy/
 COPY site/ /srv/
+COPY mta-sts.txt /run/files/
+COPY --chmod=500 entrypoint.sh /
+
+ENTRYPOINT ["/entrypoint.sh"]

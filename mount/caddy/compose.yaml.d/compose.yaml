@@ -15,6 +15,7 @@ services:
       MODE: "$MODE"
       DOMAIN: "$DOMAIN"
       TOR_DOMAIN: "$TOR_DOMAIN"
+      MX_SUBDOMAINS: "$MX_SUBDOMAINS"
       SUBDOMAIN_GRAFANA: "$SUBDOMAIN_GRAFANA"
       SUBDOMAIN_AUTHELIA: "$SUBDOMAIN_AUTHELIA"
       SUBDOMAIN_LLDAP: "$SUBDOMAIN_LLDAP"
@@ -49,3 +50,6 @@ configs:
   caddy_caddyfile:
     file: ../Caddyfile
     name: ${COMPOSE_PROJECT_NAME}.caddy.caddyfile
+  caddy_entrypoint:
+    file: ../entrypoint.sh
+    name: ${COMPOSE_PROJECT_NAME}.caddy.entrypoint
