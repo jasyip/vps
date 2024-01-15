@@ -94,6 +94,7 @@ def main() -> NoReturn:
     match tuple(map(bool, map(which, _COMPOSE_BINARIES))):
         case (True, _):
             _compose = "docker-compose"
+            os.environ.setdefault("DOCKER_BUILDKIT", "0")
             os.environ.setdefault(
                 "DOCKER_HOST",
                 "unix://{}/podman/podman.sock".format(
