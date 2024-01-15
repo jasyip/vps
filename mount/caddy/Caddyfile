@@ -18,19 +18,46 @@
   order crowdsec before respond
 }
 
+
+
 (authelia_forward) {
   forward_auth authelia:9091 {
     uri `/api/verify?rd=https://{$SUBDOMAIN_AUTHELIA}.{args[0]}{$REDIRECTION_AUTHORITY_SUFFIX}/`
     copy_headers Authorization Proxy-Authorization Remote-User Remote-Groups Remote-Email Remote-Name
   }
 }
+
+
+(default_headers) {
+  header {
+    `{args[0]}Strict-Transport-Security` `max-age=31556925; includeSubDomains`
+    -ETag
+  }
+}
+
+(file_server_opts) {
+  precompressed br zstd gzip
+}
+
 (public_server) {
   log {
     output file `/var/log/caddy/{args[0]}public_access.log`
   }
 
   crowdsec
-  file_server
+  handle_errors {
+    @custom_err file /{err.status_code}.html
+    handle @custom_err {
+      rewrite * {file_match.relative}
+      file_server {
+        import file_server_opts
+      }
+    }
+    respond "{err.status_code} {err.status_text}"
+  }
+  file_server {
+    import file_server_opts
+  }
 }
 
 (grafana_server) {
@@ -81,20 +108,24 @@
 
 
   `{$DOMAIN}` {
-    import public_server
+    import public_server ""
+    import default_headers ""
   }
 
   `{$SUBDOMAIN_GRAFANA}.{$DOMAIN}` {
     # import authelia_forward `{$DOMAIN}`
-    import grafana_server
+    import grafana_server ""
+    import default_headers ">"
   }
 
   `{$SUBDOMAIN_AUTHELIA}.{$DOMAIN}` {
-    import authelia_server
+    import authelia_server ""
+    import default_headers ">"
   }
 
   `{$SUBDOMAIN_LLDAP}.{$DOMAIN}` {
-    import lldap_server
+    import lldap_server ""
+    import default_headers ">"
   }
 }
 
@@ -109,16 +140,6 @@
   }
 
   import servers
-
-  *.*.*.* {
-    @www expression {labels.3} == "www" && {labels.1} + "." + {labels.0} == "{$DOMAIN}"
-    handle @www {
-      redir `https://{labels.2}.{$DOMAIN}{uri}` permanent
-    }
-    handle {
-      abort
-    }
-  }
 
   localhost {
     redir `https://{$DOMAIN}{$REDIRECTION_AUTHORITY_SUFFIX}{uri}`
