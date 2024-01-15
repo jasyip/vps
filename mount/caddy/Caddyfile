@@ -102,6 +102,20 @@
     redir `https://{$DOMAIN}{$REDIRECTION_AUTHORITY_SUFFIX}{uri}` permanent
   }
 
+  `https://mta-sts.{$DOMAIN}` {
+    import default_headers ""
+
+    handle /.well-known/mta-sts.txt {
+      rewrite * /mta-sts.txt
+      file_server {
+        root /run/files
+        import file_server_opts
+      }
+    }
+    handle {
+      abort
+    }
+  }
 
   `{$DOMAIN}` {
     import public_server ""
@@ -126,12 +140,12 @@
   }
 
   `http://www.{$TOR_DOMAIN}` {
-    bind unix//run/tor/site.sock
+    bind unix//run/tor/site.sock|0222
     redir `http://{$TOR_DOMAIN}{uri}` permanent
   }
 
   `http://{$TOR_DOMAIN}` {
-    bind unix//run/tor/site.sock
+    bind unix//run/tor/site.sock|0222
     import public_server tor_
     import default_headers ""
   }
