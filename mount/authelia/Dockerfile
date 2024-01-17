@@ -3,8 +3,9 @@ FROM authelia/authelia:${AUTHELIA_VERSION}
 
 EXPOSE 9959
 ENV X_AUTHELIA_CONFIG="/etc/authelia.yml"
-RUN adduser -DH authelia && chown -R authelia:authelia /app \
-    && apk del --no-cache --no-network su-exec
+RUN apk del --no-cache --no-network --purge apk-tools su-exec && \
+    rm -rf /etc/apk /lib/apk /usr/share/apk /var/lib/apk /var/cache/apk && \
+    adduser -DH authelia && chown -R authelia:authelia /app
 
 USER authelia
 ENTRYPOINT ["/app/authelia"]

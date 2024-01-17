@@ -1,7 +1,8 @@
 ARG LLDAP_VERSION
 FROM nitnelave/lldap:${LLDAP_VERSION}
 
-RUN apk del --no-cache --no-network tini && \
+RUN apk del --no-cache --no-network --purge apk-tools tini && \
+    rm -rf /etc/apk /lib/apk /usr/share/apk /var/lib/apk /var/cache/apk && \
     which -a gosu | xargs rm && \
     rm lldap_config.docker_template.toml /docker-entrypoint.sh
 
