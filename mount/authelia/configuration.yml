@@ -47,6 +47,18 @@ notifier:
     filename: /var/lib/authelia/notifications/notifications.txt
   # smtp:
 
-
+identity_providers:
+  oidc:
+    clients:
+      - id: grafana
+        description: Grafana
+        secret: "$OIDC_SECRET_HASH_GRAFANA"
+        redirect_uris:
+          - "https://${SUBDOMAIN_GRAFANA}.${DOMAIN}${REDIRECTION_AUTHORITY_SUFFIX}/login/generic_oauth"
+        scopes:
+          - openid
+          - groups
+          - profile
+        pkce_challenge_method: S256
 
 theme: auto

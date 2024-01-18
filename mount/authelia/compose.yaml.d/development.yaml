@@ -6,6 +6,7 @@ services:
     environment:
       AUTHELIA_LOG_LEVEL: trace
       LDAP_BASE_DN: "dc=localhost"
+      OIDC_SECRET_HASH_GRAFANA: "$development_OIDC_SECRET_HASH_GRAFANA"
       REDIRECTION_AUTHORITY_SUFFIX: "$LOCALHOST_REDIRECTION_SUFFIX"
     configs:
       - source: authelia_config

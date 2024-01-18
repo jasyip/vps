@@ -14,10 +14,13 @@ services:
         target: postgresql_password
       - source: grafana_metrics_password
         target: metrics_password
+      - source: grafana_oidc_secret
+        target: oidc_secret
     environment:
       MODE: "$MODE"
       DOMAIN: "$DOMAIN"
       SUBDOMAIN: "$SUBDOMAIN_GRAFANA"
+      SUBDOMAIN_AUTHELIA: "$SUBDOMAIN_AUTHELIA"
     volumes:
       - grafana_data:/var/lib/grafana
       - grafana_logs:/var/log/grafana
@@ -46,3 +49,5 @@ secrets:
     environment: "${MODE}_POSTGRESQL_PASSWORD_GRAFANA"
   grafana_metrics_password:
     environment: "${MODE}_METRICS_PASSWORD_GRAFANA"
+  grafana_oidc_secret:
+    environment: "${MODE}_OIDC_SECRET_GRAFANA"
