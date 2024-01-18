@@ -2,11 +2,6 @@
 
   admin unix//run/caddy.sock
 
-  servers {
-    trusted_proxies dns authelia
-    # metrics
-  }
-
   crowdsec {
     api_url http://crowdsec:8080
     api_key `{$CROWDSEC_BOUNCER_KEY}`
@@ -137,6 +132,10 @@
     debug
 
     local_certs
+
+    servers {
+      trusted_proxies static 10.89.0.0/24
+    }
   }
 
   import servers
@@ -155,6 +154,10 @@
     import global
 
     email `{$EMAIL}`
+
+    servers {
+      trusted_proxies dns authelia
+    }
   }
 
   import servers
