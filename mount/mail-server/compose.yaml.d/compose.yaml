@@ -1,0 +1,28 @@
+services:
+  mail-server:
+    extends:
+      file: ${MODE}.yaml
+      service: mail-server
+    build:
+      context: ..
+      args:
+        MAIL_SERVER_VERSION: "$VERSION_MAIL_SERVER"
+      tags:
+        - "${COMPOSE_PROJECT_NAME}/mail-server:${VERSION_MAIL_SERVER}"
+    volumes:
+      - mail_server_data:/opt/stalwart-mail
+    ports:
+      - 25:25
+      - 465:465
+      - 993:993
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+volumes:
+  mail_server_data:
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.mail_server.data

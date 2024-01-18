@@ -1,0 +1,10 @@
+services:
+  mail-server:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common
+    volumes:
+      - type: bind
+        source: ../etc
+        target: /opt/stalwart-mail/etc
+        read_only: true
