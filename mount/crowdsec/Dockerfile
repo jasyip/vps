@@ -1,7 +1,8 @@
 ARG CROWDSEC_VERSION
 FROM crowdsecurity/crowdsec:${CROWDSEC_VERSION}
 
-RUN apk del --no-cache --no-network --purge apk-tools rsync && \
+RUN apk add --no-network --no-cache ca-certificates-bundle && \
+    apk del --no-cache --no-network --purge apk-tools rsync && \
     rm -rf /etc/apk /lib/apk /usr/share/apk /var/lib/apk /var/cache/apk
 
 EXPOSE 6060
