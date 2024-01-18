@@ -1,0 +1,4 @@
+HiddenServiceDir /var/lib/tor/hidden_service/
+HiddenServicePort 80 unix:/run/tor/site.sock
+Sandbox 1
+LogTimeGranularity 10

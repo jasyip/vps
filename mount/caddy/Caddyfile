@@ -24,10 +24,11 @@
 
 
 (default_headers) {
-  header {
-    `{args[0]}Strict-Transport-Security` `max-age=31556925; includeSubDomains`
-    -ETag
-  }
+  header -ETag
+}
+(https_headers) {
+  import default_headers {args[:]}
+  header `{args[0]}Strict-Transport-Security` `max-age=31556925; includeSubDomains`
 }
 
 (file_server_opts) {
@@ -104,24 +105,37 @@
 
   `{$DOMAIN}` {
     import public_server ""
-    import default_headers ""
+    import https_headers ""
+    header `{args[0]}Onion-Location` `{$TOR_DOMAIN}`
   }
 
   `{$SUBDOMAIN_GRAFANA}.{$DOMAIN}` {
     # import authelia_forward `{$DOMAIN}`
     import grafana_server ""
-    import default_headers ">"
+    import https_headers ">"
   }
 
   `{$SUBDOMAIN_AUTHELIA}.{$DOMAIN}` {
     import authelia_server ""
-    import default_headers ">"
+    import https_headers ">"
   }
 
   `{$SUBDOMAIN_LLDAP}.{$DOMAIN}` {
     import lldap_server ""
-    import default_headers ">"
+    import https_headers ">"
   }
+
+  `http://www.{$TOR_DOMAIN}` {
+    bind unix//run/tor/site.sock
+    redir `http://{$TOR_DOMAIN}{uri}` permanent
+  }
+
+  `http://{$TOR_DOMAIN}` {
+    bind unix//run/tor/site.sock
+    import public_server tor_
+    import default_headers ""
+  }
+
 }
 
 

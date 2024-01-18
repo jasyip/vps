@@ -1,0 +1,53 @@
+include:
+- ../../caddy/compose.yaml.d/compose.yaml
+
+services:
+  tor:
+    extends:
+      file: ${MODE}.yaml
+      service: tor
+    build:
+      context: ..
+      args:
+        TOR_VERSION: "$VERSION_TOR"
+      tags:
+        - "${COMPOSE_PROJECT_NAME}/tor:${VERSION_CADDY}"
+    environment:
+      TOR_DOMAIN: "$TOR_DOMAIN"
+    volumes:
+      - tor_data:/var/lib/tor
+      - caddy_tor_socket:/run/tor
+    secrets:
+      - source: tor_public_key
+        target: hs_ed25519_public_key
+      - source: tor_secret_key
+        target: hs_ed25519_secret_key
+    ports:
+      - 9050:9050
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+volumes:
+  tor_data:
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.tor.data
+
+configs:
+  tor_torrc:
+    file: ../torrc
+    name: ${COMPOSE_PROJECT_NAME}.tor.torrc
+  tor_entrypoint:
+    file: ../entrypoint.sh
+    name: ${COMPOSE_PROJECT_NAME}.tor.entrypoint
+
+secrets:
+  tor_public_key:
+    file: ./secrets/hs_ed25519_public_key
+    name: ${COMPOSE_PROJECT_NAME}.tor.public_key
+  tor_secret_key:
+    file: ./secrets/hs_ed25519_secret_key
+    name: ${COMPOSE_PROJECT_NAME}.tor.secret_key

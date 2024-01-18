@@ -1,0 +1,6 @@
+services:
+  tor:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common
+    command: ["--Log", "info syslog"]
