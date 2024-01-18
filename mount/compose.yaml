@@ -7,11 +7,13 @@ include:
   - authelia/compose.yaml.d/compose.yaml
   - caddy/compose.yaml.d/compose.yaml
   - crowdsec/compose.yaml.d/compose.yaml
+  # - crowdsec-firewall-bouncer/compose.yaml.d/compose.yaml
   - grafana/compose.yaml.d/compose.yaml
   - lldap/compose.yaml.d/compose.yaml
   - openrc-exporter/compose.yaml.d/compose.yaml
   - podman-exporter/compose.yaml.d/compose.yaml
   - postgres-exporter/compose.yaml.d/compose.yaml
+  - mail-server/compose.yaml.d/compose.yaml
   - prometheus/compose.yaml.d/compose.yaml
   - tor/compose.yaml.d/compose.yaml
 
