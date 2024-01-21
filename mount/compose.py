@@ -95,6 +95,7 @@ def main() -> NoReturn:
         case (True, _):
             _compose = "docker-compose"
             os.environ.setdefault("DOCKER_BUILDKIT", "0")
+            main_args.append(("--ansi", "always"))
             os.environ.setdefault(
                 "DOCKER_HOST",
                 "unix://{}/podman/podman.sock".format(
