@@ -33,7 +33,7 @@ _own_parser: Final = ArgumentParser()
 _own_parser.add_argument("-d", "--debug", action="store_true")
 _own_parser.add_argument(
     "--less-opts",
-    default="",
+    default="-FMsRWN --redraw-on-quit --use-color --wordwrap --exit-follow-on-close",
     type=shlex.split,
     help="options to pass to 'less', which may be invoked depending on provided subcommand",
 )
