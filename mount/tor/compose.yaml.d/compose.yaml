@@ -12,8 +12,6 @@ services:
         TOR_VERSION: "$VERSION_TOR"
       tags:
         - "${COMPOSE_PROJECT_NAME}/tor:${VERSION_CADDY}"
-    environment:
-      TOR_DOMAIN: "$TOR_DOMAIN"
     volumes:
       - tor_data:/var/lib/tor
       - caddy_tor_socket:/run/tor
@@ -22,6 +20,8 @@ services:
         target: hs_ed25519_public_key
       - source: tor_secret_key
         target: hs_ed25519_secret_key
+      - source: tor_hostname
+        target: hostname
     ports:
       - 9050:9050
     read_only: true
@@ -40,9 +40,6 @@ configs:
   tor_torrc:
     file: ../torrc
     name: ${COMPOSE_PROJECT_NAME}.tor.torrc
-  tor_entrypoint:
-    file: ../entrypoint.sh
-    name: ${COMPOSE_PROJECT_NAME}.tor.entrypoint
 
 secrets:
   tor_public_key:
@@ -51,3 +48,6 @@ secrets:
   tor_secret_key:
     file: ./secrets/hs_ed25519_secret_key
     name: ${COMPOSE_PROJECT_NAME}.tor.secret_key
+  tor_hostname:
+    environment: "TOR_DOMAIN"
+    name: ${COMPOSE_PROJECT_NAME}.tor.hostname

@@ -6,7 +6,5 @@ services:
     configs:
       - source: tor_torrc
         target: /etc/tor/torrc
-      - source: tor_entrypoint
-        target: /entrypoint.sh
 
     command: ["--Log", "debug syslog"]
