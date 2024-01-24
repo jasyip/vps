@@ -6,7 +6,7 @@ RUN apk --no-cache add "tor=$TOR_VERSION" libcap && \
     apk del --no-cache --no-network --purge apk-tools libcap && \
     rm -fr /etc/apk /lib/apk /usr/share/apk /var/lib/apk /var/cache/apk && \
     for i in hostname hs_ed25519_secret_key hs_ed25519_public_key; do \
-      ln -s -t /var/lib/tor "/run/secrets/$i" || exit; \
+      ln -s "/run/secrets/$i" /var/lib/tor || exit; \
     done
 # tor user is already added
 
