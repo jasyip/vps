@@ -15,8 +15,7 @@ services:
       AUTHELIA_STORAGE_ENCRYPTION_KEY_FILE: /run/secrets/storage_encryption_key
       AUTHELIA_SESSION_SECRET_FILE: /run/secrets/session_secret
       AUTHELIA_AUTHENTICATION_BACKEND_LDAP_PASSWORD_FILE: /run/secrets/ldap_password
-      AUTHELIA_IDENTITY_PROVIDERS_OIDC_ISSUER_PRIVATE_KEY_FILE: /run/secrets/oidc_private_key
-      X_AUTHELIA_CONFIG_FILTERS: expand-env
+      X_AUTHELIA_CONFIG_FILTERS: expand-env,template
       SUBDOMAIN: "$SUBDOMAIN_AUTHELIA"
       SUBDOMAIN_GRAFANA: "$SUBDOMAIN_GRAFANA"
       DOMAIN: "$DOMAIN"
@@ -41,6 +40,8 @@ services:
         target: ldap_password
       - source: authelia_oidc_private_key
         target: oidc_private_key
+      - source: authelia_oidc_secret_hash_grafana
+        target: oidc_secret_hash_grafana
     # network_mode: "slirp4netns:allow_host_loopback=true"
     read_only: true
     security_opt:
@@ -68,6 +69,8 @@ secrets:
     environment: "${MODE}_LDAP_PASSWORD_AUTHELIA"
   authelia_oidc_private_key:
     file: "./secrets/${MODE}/private.pem"
+  authelia_oidc_secret_hash_grafana:
+    environment: "${MODE}_OIDC_SECRET_HASH_GRAFANA"
 
 configs:
   authelia_config:
