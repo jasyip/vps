@@ -4,3 +4,5 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     command: ["--Log", "info syslog"]
+    depends_on:
+      - caddy
