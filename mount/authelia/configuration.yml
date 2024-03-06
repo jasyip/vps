@@ -50,8 +50,8 @@ notifier:
 identity_providers:
   oidc:
     issuer_private_keys:
-      - key: |+
-          {{ fileContent "/run/secrets/oidc_private_key" | indent 10 }}
+      - key: |
+          {{- fileContent "/run/secrets/oidc_private_key" | nindent 10 }}
     clients:
       - id: grafana
         description: Grafana
