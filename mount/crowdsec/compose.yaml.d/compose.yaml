@@ -8,7 +8,7 @@ services:
       args:
         CROWDSEC_VERSION: "$VERSION_CROWDSEC"
       tags:
-        - "${COMPOSE_PROJECT_NAME}/crowdsec:${VERSION_CADDY}"
+        - "${COMPOSE_PROJECT_NAME}/crowdsec:${VERSION_CROWDSEC}"
     environment:
       COLLECTIONS: >-
         crowdsecurity/caddy
