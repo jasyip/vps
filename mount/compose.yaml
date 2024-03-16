@@ -9,6 +9,7 @@ include:
   - crowdsec/compose.yaml.d/compose.yaml
   - grafana/compose.yaml.d/compose.yaml
   - lldap/compose.yaml.d/compose.yaml
+  - openrc-exporter/compose.yaml.d/compose.yaml
   - prometheus/compose.yaml.d/compose.yaml
   - tor/compose.yaml.d/compose.yaml
 

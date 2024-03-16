@@ -1,0 +1,5 @@
+services:
+  openrc-exporter:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common
