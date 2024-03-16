@@ -38,6 +38,11 @@ scrape_configs:
     - targets:
       - openrc-exporter:9816
 
+  - job_name: podman-exporter
+    static_configs:
+    - targets:
+      - podman-exporter:9882
+
   - job_name: prometheus
     static_configs:
     - targets:
