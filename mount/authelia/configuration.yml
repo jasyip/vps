@@ -43,9 +43,16 @@ storage:
     username: "${MODE}_authelia"
 
 notifier:
+  {{- if env MODE | eq "production" }}
+  smtp:
+    host: mail-server
+    port: 587
+    sender: noreply@${DOMAIN}
+    disable_html_emails: true
+  {{- else }}
   filesystem:
     filename: /var/lib/authelia/notifications/notifications.txt
-  # smtp:
+  {{- end }}
 
 identity_providers:
   oidc:
