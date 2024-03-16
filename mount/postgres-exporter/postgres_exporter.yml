@@ -1,0 +1,5 @@
+auth_modules:
+  default:
+    type: userpass
+    options:
+      sslmode: disable

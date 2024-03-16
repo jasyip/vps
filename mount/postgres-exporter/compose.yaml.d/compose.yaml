@@ -1,0 +1,36 @@
+services:
+  postgres-exporter:
+    extends:
+      file: ${MODE}.yaml
+      service: postgres-exporter
+    build:
+      context: ..
+      args:
+        POSTGRES_EXPORTER_VERSION: "$VERSION_POSTGRES_EXPORTER"
+      tags:
+        - "${COMPOSE_PROJECT_NAME}/postgres-exporter:${VERSION_POSTGRES_EXPORTER}"
+    environment:
+      DATA_SOURCE_URI: "postgres@:5432/postgres?host=/run/postgresql"
+      DATA_SOURCE_USER: "${MODE}_exporter"
+      DATA_SOURCE_PASS_FILE: "/run/secrets/password"
+    volumes:
+      - type: bind
+        source: /run/postgresql
+        target: /run/postgresql
+    secrets:
+      - source: postgres_exporter_postgresql_password
+        target: password
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+secrets:
+  postgres_exporter_postgresql_password:
+    environment: "${MODE}_POSTGRESQL_PASSWORD_EXPORTER"
+
+configs:
+  postgres_exporter_config:
+    file: ../postgres_exporter.yml
+    name: ${COMPOSE_PROJECT_NAME}.postgres-exporter.config
