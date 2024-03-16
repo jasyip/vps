@@ -40,6 +40,11 @@ services:
     cap_drop:
       - ALL
 
+configs:
+  crowdsec_local_config:
+    file: ../config.yaml.local
+    name: ${COMPOSE_PROJECT_NAME}.crowdsec.local_config
+
 volumes:
   crowdsec_config:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.crowdsec.config
