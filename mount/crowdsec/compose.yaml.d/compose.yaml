@@ -7,6 +7,9 @@ services:
       context: ..
       args:
         CROWDSEC_VERSION: "$VERSION_CROWDSEC"
+        GO_BUILDER_VERSION: "$VERSION_BUILDER_GO"
+        DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
+        YQ_VERSION: "$VERSION_CROWDSEC_YQ"
       tags:
         - "${COMPOSE_PROJECT_NAME}/crowdsec:${VERSION_CROWDSEC}"
     environment:
@@ -41,6 +44,9 @@ services:
       - ALL
 
 configs:
+  crowdsec_docker_start:
+    file: ../docker_start.sh
+    name: ${COMPOSE_PROJECT_NAME}.crowdsec.docker_start
   crowdsec_local_config:
     file: ../config.yaml.local
     name: ${COMPOSE_PROJECT_NAME}.crowdsec.local_config
