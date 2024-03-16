@@ -1,0 +1,31 @@
+services:
+  openrc-exporter:
+    extends:
+      file: ${MODE}.yaml
+      service: openrc-exporter
+    build:
+      context: ..
+      args:
+        OPENRC_EXPORTER_VERSION: "$VERSION_OPENRC_EXPORTER"
+      tags:
+        - "${COMPOSE_PROJECT_NAME}/openrc-exporter:${VERSION_OPENRC_EXPORTER}"
+    volumes:
+      - type: bind
+        source: /run/openrc
+        target: /run/openrc
+        read_only: true
+      - type: bind
+        source: /etc/conf.d
+        target: /etc/conf.d
+        read_only: true
+      - type: bind
+        source: /etc/init.d
+        target: /etc/init.d
+        read_only: true
+    expose:
+      - 9816
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

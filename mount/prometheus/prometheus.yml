@@ -33,6 +33,10 @@ scrape_configs:
       username: prometheus
       password_file: /run/secrets/metrics_password_grafana
 
+  - job_name: openrc-exporter
+    static_configs:
+    - targets:
+      - openrc-exporter:9816
 
   - job_name: prometheus
     static_configs:
