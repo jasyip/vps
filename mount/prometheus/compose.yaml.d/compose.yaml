@@ -28,6 +28,14 @@ secrets:
   grafana_metrics_password:
     environment: "${MODE}_METRICS_PASSWORD_GRAFANA"
 
+configs:
+  prometheus_config:
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.prometheus.config
+    file: ../prometheus.yml
+  prometheus_alerts_config:
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.prometheus.alerts_config
+    file: ../alerts.yml
+
 volumes:
   prometheus_data:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.prometheus.data

@@ -10,3 +10,8 @@ services:
       - "--web.console.templates=/usr/share/prometheus/consoles"
       - "--enable-feature=memory-snapshot-on-shutdown"
       - "--log.level=debug"
+    configs:
+      - source: prometheus_config
+        target: /etc/prometheus/prometheus.yml
+      - source: prometheus_alerts_config
+        target: /etc/prometheus/alerts.yml
