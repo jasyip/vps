@@ -1,0 +1,14 @@
+#############################################
+# JMAP server listener configuration
+#############################################
+
+[server.listener."jmap"]
+protocol = "jmap"
+bind = ["[::]:443"]
+url = "https://%{SUBDOMAIN}%.%{DOMAIN}%"
+
+[server.listener."jmap".tls]
+implicit = true
+
+#bind = ["[::]:8080"]
+#url = "https://%{SUBDOMAIN}%.%{DOMAIN}%:8080"
