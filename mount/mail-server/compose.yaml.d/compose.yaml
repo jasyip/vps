@@ -11,8 +11,18 @@ services:
         CARGO_CHEF_VERSION: "$VERSION_MAIL_SERVER_CARGO_CHEF"
       tags:
         - "${COMPOSE_PROJECT_NAME}/mail-server:${VERSION_MAIL_SERVER}"
+    environment:
+      DOMAIN: "$DOMAIN"
+      MX_SUBDOMAIN: "$MX_SUBDOMAIN"
     volumes:
       - mail_server_data:/opt/stalwart-mail
+      - type: bind
+        source: ../etc/certs
+        target: /opt/stalwart-mail/etc/certs
+        read_only: true
+      - type: bind
+        source: /run/postgresql
+        target: /run/postgresql
     ports:
       - 25:25
       - 465:465
@@ -27,4 +37,4 @@ services:
 
 volumes:
   mail_server_data:
-    name: ${COMPOSE_PROJECT_NAME}.${MODE}.mail_server.data
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.mail-server.data

@@ -1,0 +1,57 @@
+#############################################
+# SMTP reporting configuration
+#############################################
+
+[report]
+path = "%{BASE_PATH}%/reports"
+hash = 64
+#submitter = "%{SUBDOMAIN}%.%{DOMAIN}%"
+
+[report.analysis]
+addresses = ["dmarc@*", "abuse@*", "postmaster@*"]
+forward = true
+#store = "%{BASE_PATH}%/incoming"
+
+[report.dsn]
+from-name = "'Mail Delivery Subsystem'"
+from-address = "'MAILER-DAEMON@%{DOMAIN}%'"
+sign = "['rsa']"
+
+[report.dkim]
+from-name = "'Report Subsystem'"
+from-address = "'noreply-dkim@%{DOMAIN}%'"
+subject = "'DKIM Authentication Failure Report'"
+sign = "['rsa']"
+send = "[1, 1d]"
+
+[report.spf]
+from-name = "'Report Subsystem'"
+from-address = "'noreply-spf@%{DOMAIN}%'"
+subject = "'SPF Authentication Failure Report'"
+send = "[1, 1d]"
+sign = "['rsa']"
+
+[report.dmarc]
+from-name = "'Report Subsystem'"
+from-address = "'noreply-dmarc@%{DOMAIN}%'"
+subject = "'DMARC Authentication Failure Report'"
+send = "[1, 1d]"
+sign = "['rsa']"
+
+[report.dmarc.aggregate]
+from-name = "'DMARC Report'"
+from-address = "'noreply-dmarc@%{DOMAIN}%'"
+org-name = "'%{DOMAIN}%'"
+#contact-info = ""
+send = "daily"
+max-size = 26214400 # 25mb
+sign = "['rsa']"
+
+[report.tls.aggregate]
+from-name = "'TLS Report'"
+from-address = "'noreply-tls@%{DOMAIN}%'"
+org-name = "'%{DOMAIN}%'"
+#contact-info = ""
+send = "daily"
+max-size = 26214400 # 25 mb
+sign = "['rsa']"
