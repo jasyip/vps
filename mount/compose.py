@@ -157,15 +157,14 @@ def main() -> NoReturn:
             | "unpause"
             | "kill"
             | "reload"
+            | "exec"
+            | "config"
         ):
             for i, arg in enumerate(additional_subcommand_args):
                 if not arg.startswith("-"):
                     additional_subcommand_args[i] = arg.rstrip("/")
-        case "exec":
-            for i, arg in enumerate(additional_subcommand_args):
-                if not arg.startswith("-"):
-                    additional_subcommand_args[i] = arg.rstrip("/")
-                    break
+                    if subcommand == "exec":
+                        break
 
     main_args.append(tuple(additional_main_args))
     del additional_main_args
