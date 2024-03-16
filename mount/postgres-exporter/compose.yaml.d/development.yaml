@@ -1,0 +1,12 @@
+services:
+  postgres-exporter:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common
+    command:
+      - --log.level=debug
+    ports:
+      - 127.0.0.1:9187:9187
+    configs:
+      - source: postgres_exporter_config
+        target: ./postgres_exporter.yml
