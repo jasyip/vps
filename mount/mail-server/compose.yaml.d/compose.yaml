@@ -7,6 +7,8 @@ services:
       context: ..
       args:
         MAIL_SERVER_VERSION: "$VERSION_MAIL_SERVER"
+        DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
+        CARGO_CHEF_VERSION: "$VERSION_MAIL_SERVER_CARGO_CHEF"
       tags:
         - "${COMPOSE_PROJECT_NAME}/mail-server:${VERSION_MAIL_SERVER}"
     volumes:
