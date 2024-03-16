@@ -1,0 +1,19 @@
+services:
+  podman-exporter:
+    extends:
+      file: ${MODE}.yaml
+      service: podman-exporter
+    image: quay.io/navidys/prometheus-podman-exporter:$VERSION_PODMAN_EXPORTER
+    environment:
+      CONTAINER_HOST: "unix:///run/podman/podman.sock"
+    volumes:
+      - type: bind
+        source: "$XDG_RUNTIME_DIR/podman/podman.sock"
+        target: /run/podman/podman.sock
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+      - label:disable
+    cap_drop:
+      - ALL
+    userns_mode: keep-id:uid=65534
