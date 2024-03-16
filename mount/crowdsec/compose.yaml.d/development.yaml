@@ -7,5 +7,7 @@ services:
       POSTGRESQL_PASSWORD: "$development_POSTGRESQL_PASSWORD_CROWDSEC"
       BOUNCER_KEY_caddy: "$development_CROWDSEC_BOUNCER_KEY_CADDY"
     configs:
+      - source: crowdsec_docker_start
+        target: /docker_start.sh
       - source: crowdsec_local_config
         target: /etc/crowdsec/config.yaml.local
