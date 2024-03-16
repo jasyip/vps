@@ -50,6 +50,3 @@ configs:
   caddy_caddyfile:
     file: ../Caddyfile
     name: ${COMPOSE_PROJECT_NAME}.caddy.caddyfile
-  caddy_entrypoint:
-    file: ../entrypoint.sh
-    name: ${COMPOSE_PROJECT_NAME}.caddy.entrypoint
