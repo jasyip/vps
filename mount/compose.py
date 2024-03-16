@@ -262,25 +262,26 @@ def main() -> NoReturn:
 
     _logger.debug(f"subcommand_args after parsing subcommand: {subcommand_args}")
 
-    final_command: Final[tuple[str, ...]] = command()
-    _logger.info(f"Executing: {final_command}")
+    def main_command() -> tuple[str, ...]:
+        _command = command()
+        _logger.info(f"Executing: {_command}")
+        sys.stdout.flush()
+        sys.stderr.flush()
+        return _command
 
     if "--help" not in chain.from_iterable(chain(main_args, subcommand_args)):
         match subcommand:
             case "logs" | "config":
                 _logger.info("Will pipe command stdout and stderr to 'less'")
-                sys.stdout.flush()
-                sys.stderr.flush()
                 os.execl(
                     "/bin/sh",
                     "/bin/sh",
                     "-c",
-                    f"{shlex.join(final_command)} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
+                    f"{shlex.join(main_command())} 2>&1 | /usr/bin/less {shlex.join(own_args.less_opts)}",
                 )
 
-    sys.stdout.flush()
-    sys.stderr.flush()
-    os.execvp(final_command[0], final_command)
+    command: Final[tuple[str, ...]] = main_command()
+    os.execvp(command[0], command)
 
 
 if __name__ == "__main__":
