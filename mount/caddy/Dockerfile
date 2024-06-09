@@ -12,7 +12,7 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 
 COPY ./entrypoint.c /usr/local/src/
 RUN apk add --no-cache gcc libc-dev && \
-    gcc -Os /usr/local/src/entrypoint.c -o /usr/bin/entrypoint && \
+    gcc -Os -s /usr/local/src/entrypoint.c -o /usr/bin/entrypoint && \
     apk del --no-cache gcc libc-dev
 
 FROM caddy:${CADDY_VERSION}-alpine
