@@ -2,11 +2,19 @@ ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder
 
 ARG OPENRC_EXPORTER_VERSION
-WORKDIR /usr/src/exporter
-RUN apk add openrc-dev openrc-static gcc libc-dev && \
+WORKDIR /go/src/exporter
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/var/cache/apk \
+    PKGS="openrc-dev openrc-static gcc libc-dev" && \
+    apk add $PKGS && \
     wget -qO - "https://git.sr.ht/~tomleb/openrc-exporter/archive/${OPENRC_EXPORTER_VERSION}.tar.gz" | \
         tar -xzf - --strip-components 1 && \
-    cd cmd/openrc-exporter && CGO_ENABLED=1 GOOS=linux go build -v -ldflags="-extldflags=-static" -o /openrc-exporter
+    cd cmd/openrc-exporter && \
+    CGO_CPPFLAGS="-D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full" \
+    CGO_LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now" \
+    go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /openrc-exporter . && \
+    apk del $PKGS && rm -rf *
 
 FROM scratch
 
