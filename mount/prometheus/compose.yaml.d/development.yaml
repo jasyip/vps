@@ -15,3 +15,5 @@ services:
         target: /etc/prometheus/prometheus.yml
       - source: prometheus_alerts_config
         target: /etc/prometheus/alerts.yml
+    ports:
+      - 9090:9090
