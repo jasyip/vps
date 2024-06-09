@@ -4,7 +4,7 @@ FROM golang:${GO_BUILDER_VERSION} AS yq-builder
 ARG YQ_VERSION
 WORKDIR /go/src/mikefarah/yq
 RUN wget -qO - "https://github.com/mikefarah/yq/archive/refs/tags/v${YQ_VERSION}.tar.gz" | \
-    tar -xzf - --strip-components 1 && CGO_ENABLED=0 go build -o /yq -ldflags=-extldflags=-static .
+    tar -xzf - --strip-components 1 && CGO_ENABLED=0 go build -ldflags="-s -w" -o /yq .
 
 ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:debug-nonroot
