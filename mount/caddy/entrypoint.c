@@ -3,7 +3,7 @@
 #include <assert.h>    // for assert
 #include <stdbool.h>   // for false
 #include <stdio.h>     // for perror, fputs, stderr, fclose, ferror, fflush
-#include <stdlib.h>    // for exit, free, malloc, secure_getenv
+#include <stdlib.h>    // for exit, malloc, secure_getenv
 #include <string.h>    // for memcpy, strlen, strstr
 #include <unistd.h>    // for execvp
 
@@ -13,7 +13,7 @@
 
 int main(int argc, char* argv[])
 {
-      int stage_fails = 2;
+      int stage_successes = 0;
       if (argc < 2) {
             fprintf(stderr, "Usage: %s mta_sts_file [ARGS...]\n", argv[0]);
             goto exit;
@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 
       FILE *const f = fopen(argv[1], "a");
       if (!f) {
-            fputs("Error reading config file\n", stderr);
+            perror("Error reading config file");
             goto exit;
       }
       char const *const subdomain = secure_getenv("MX_SUBDOMAIN");
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
             goto close_f;
       }
 
-      --stage_fails;
+      ++stage_successes;
 
 close_f:
       if (fclose(f) == -1) {
@@ -48,9 +48,7 @@ close_f:
             goto exit;
       }
 
-      --stage_fails;
-      assert(stage_fails >= 0);
-      if (stage_fails) {
+      if (!stage_successes) {
             goto exit;
       }
 
@@ -65,9 +63,6 @@ close_f:
       fflush(stderr);
       execvp(BINARY, (char *const *)exec_args);
       perror("Error executing " BINARY);
-
-free_exec_args:
-      free(exec_args);
 
 exit:
       exit(1);
