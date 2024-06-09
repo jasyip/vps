@@ -3,3 +3,5 @@ services:
     extends:
       file: ../../compose.yaml.d/compose.yaml
       service: common
+    ports:
+      - 127.0.0.1:9816:9816
