@@ -385,8 +385,8 @@ IFS='
 '
 # shellcheck disable=SC2044
 for BOUNCER in $(find /run/secrets -iname 'bouncer_key_*'); do
-    KEY=$(cat "${BOUNCER}")
-    NAME=$(basename "${BOUNCER}")
+    KEY="$(cat "${BOUNCER}")"
+    NAME="$(echo "${BOUNCER}" | cut -d -f3- -)"
     if [ -n "$KEY" ] && [ -n "$NAME" ]; then
         register_bouncer "$NAME" "$KEY"
     fi
