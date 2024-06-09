@@ -88,7 +88,7 @@
     }
 
     handle @metrics {
-      basicauth {
+      basic_auth {
         prometheus `{$METRICS_PASSWORD_HASH}`
       }
       metrics
