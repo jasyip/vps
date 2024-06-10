@@ -44,7 +44,6 @@ services:
         target: oidc_private_key
       - source: authelia_oidc_secret_hash_grafana
         target: oidc_secret_hash_grafana
-    # network_mode: "slirp4netns:allow_host_loopback=true"
     read_only: true
     security_opt:
       - no-new-privileges:true
