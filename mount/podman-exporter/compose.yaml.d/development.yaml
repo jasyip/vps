@@ -4,6 +4,9 @@ services:
       file: ../../compose.yaml.d/compose.yaml
       service: common
     command:
+      - -n
+      - -s
+      - -v
       - -d
     ports:
       - 127.0.0.1:9882:9882
