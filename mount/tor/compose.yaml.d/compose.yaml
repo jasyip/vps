@@ -10,8 +10,12 @@ services:
       context: ..
       args:
         TOR_VERSION: "$VERSION_TOR"
+        ALPINE_VERSION: "$VERSION_BUILDER_ALPINE"
+        ZLIB_VERSION: "$VERSION_BUILDER_ZLIB"
+        LIBEVENT_VERSION: "$VERSION_BUILDER_LIBEVENT"
+        OPENSSL_VERSION: "$VERSION_BUILDER_OPENSSL"
       tags:
-        - "${COMPOSE_PROJECT_NAME}/tor:${VERSION_CADDY}"
+        - "${COMPOSE_PROJECT_NAME}/tor:${VERSION_TOR}"
     volumes:
       - tor_data:/var/lib/tor
       - caddy_tor_socket:/run/tor
