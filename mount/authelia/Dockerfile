@@ -3,7 +3,8 @@ FROM golang:${GO_BUILDER_VERSION} AS builder-backend
 
 
 WORKDIR /usr/local/src/busybox
-RUN apk add --no-cache gcc make libc-dev && \
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    apk add gcc make libc-dev && \
     wget -qO - "https://busybox.net/downloads/busybox-1.36.1.tar.bz2" | \
         tar -xkjf - --strip-components 1 && \
     make allnoconfig && \
