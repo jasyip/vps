@@ -11,9 +11,10 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
     --with "github.com/fvbommel/caddy-dns-ip-range@${DNS_IP_RANGE_VERSION}"
 
 COPY ./entrypoint.c /usr/local/src/
-RUN apk add --no-cache gcc libc-dev && \
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    apk add gcc libc-dev && \
     gcc -Os -s /usr/local/src/entrypoint.c -o /usr/bin/entrypoint && \
-    apk del --no-cache gcc libc-dev
+    apk del --no-network --no-cache gcc libc-dev
 
 FROM caddy:${CADDY_VERSION}-alpine
 # Just copy the config files, no need for volume!

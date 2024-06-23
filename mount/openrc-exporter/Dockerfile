@@ -5,7 +5,7 @@ ARG OPENRC_EXPORTER_VERSION
 WORKDIR /go/src/exporter
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    --mount=type=cache,target=/var/cache/apk \
+    --mount=type=cache,target=/var/cache/apk,sharing=locked \
     PKGS="openrc-dev openrc-static gcc libc-dev" && \
     apk add $PKGS && \
     wget -qO - "https://git.sr.ht/~tomleb/openrc-exporter/archive/${OPENRC_EXPORTER_VERSION}.tar.gz" | \
