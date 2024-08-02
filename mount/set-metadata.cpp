@@ -6,6 +6,7 @@
 #include <optional>
 #include <string>
 #include <unordered_set>
+#include <regex>
 
 #include <grp.h>
 #include <pwd.h>
@@ -16,8 +17,9 @@ using std::cerr;
 using namespace std::string_literals;
 
 static std::optional<std::string> prog;
-static constexpr std::array pos_args = {"MOUNT", "GROUP"};
+constexpr std::array pos_args = {"MOUNT", "GROUP"};
 static const fs::path mount{"/mnt"};
+static const std::array others_reads = {std::regex{"(^|/)caddy/site/"}};
 
 static void prog_error() { cerr << *prog << ": error: "; }
 
@@ -96,12 +98,12 @@ static bool apply(fs::directory_entry const &entry,
 
     if (static_cast<bool>(perms & fs::perms::owner_read)) {
       perms |= fs::perms::group_read;
-      if (is_regular_file) {
-        fs::path const relative_path =
-            canonical_path.lexically_relative(starting_dir);
-        if (depth)
-          perms |= fs::perms::others_read;
-      }
+      bool others_read = is_regular_file && depth;
+      for (auto it = others_reads.begin(); !others_read && it != others_reads.end(); ++it)
+        others_read = std::regex_search(path.native(), *it);
+
+      if (others_read)
+        perms |= fs::perms::others_read;
     }
     if (static_cast<bool>(perms & fs::perms::owner_exec)) {
       perms |= fs::perms::group_exec;
