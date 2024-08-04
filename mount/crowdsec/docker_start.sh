@@ -18,7 +18,7 @@ isfalse() {
 
 if istrue "$DEBUG"; then
     set -x
-    export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+    export PS4='+($0:${LINENO}): '
 fi
 
 if istrue "$CI_TESTING"; then
