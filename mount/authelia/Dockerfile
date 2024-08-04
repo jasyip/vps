@@ -1,57 +1,73 @@
 ARG GO_BUILDER_VERSION
-FROM golang:${GO_BUILDER_VERSION} AS builder-backend
+FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    apk add gcc make libc-dev mold
+
+FROM builder-base AS builder-other
+
+ARG BUSYBOX_VERSION
+ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -flto -fPIE -pie"
+ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
 
 WORKDIR /usr/local/src/busybox
-RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add gcc make libc-dev && \
-    wget -qO - "https://busybox.net/downloads/busybox-1.36.1.tar.bz2" | \
+RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2" | \
         tar -xkjf - --strip-components 1 && \
     make allnoconfig && \
     sleep 1 && \
-    sed -i 's/^.*CONFIG_\(STATIC\|INSTALL_NO_USR\|DESKTOP\|USE_PORTABLE_CODE\|LONG_OPTS\|SH_IS_NONE\|WGET\|FEATURE_WGET_LONG_OPTIONS\|FEATURE_WGET_TIMEOUT\)[ =].*$/CONFIG_\1=y/' .config && \
+    sed -i 's/^.*CONFIG_\(STATIC\|INSTALL_NO_USR\|DESKTOP\|LONG_OPTS\|SH_IS_NONE\|WGET\|FEATURE_WGET_LONG_OPTIONS\|FEATURE_WGET_TIMEOUT\|USE_PORTABLE_CODE\)[ =].*$/CONFIG_\1=y/' .config && \
     sed -i 's/^.*\(CONFIG_SH_IS_ASH\)[ =].*$/\1=n/' .config && \
     sed -i 's/^.*\(CONFIG_PREFIX\)[ =].*$/\1="\/busybox"/' .config && \
-    sed -i 's/^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$/\1="-Os -s"/' .config && \
-    make busybox && \
-    make install && \
-    apk del --no-cache --no-network make && \
-    rm -rf *
+    sed -i "s/^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$/\1=\"$CFLAGS\"/" .config && \
+    sed -i "s/^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$/\1=\"$LDFLAGS\"/" .config
 
-COPY healthcheck.c ./
-
-RUN gcc -Os -s -static -o /healthcheck healthcheck.c && \
-    apk del --no-cache --no-network libc-dev gcc
+RUN --mount=target=healthcheck.c,source=healthcheck.c \
+    mold -run make busybox && \
+    mold -run make install && \
+    exec cc $CFLAGS -s -static-pie -o /healthcheck healthcheck.c
 
 
-WORKDIR /go/src
+FROM builder-base AS builder
+
+WORKDIR /usr/local/src/authelia
+
 ARG AUTHELIA_VERSION
 RUN --mount=type=cache,target=/go/pkg/mod \
-    --mount=type=cache,target=/root/.cache/go-build \
     wget -qO - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
-        tar -xzf - $(echo api cmd internal go.mod go.sum | xargs -n 1 printf " authelia-${AUTHELIA_VERSION}/%s") && \
-    cd "authelia-${AUTHELIA_VERSION}" && \
+        tar -xzf - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum) && \
     mv api internal/server/public_html/api && \
     wget -qO - "https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz" | \
         tar -C internal/server -xzf - && \
-    CGO_ENABLED=0 go build -ldflags="-s -w" -o /go/bin/authelia ./cmd/authelia && \
+    exec go mod download
+
+ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -flto -fPIE -pie"
+ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --network=none \
+    CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
+    go build -buildmode=pie -trimpath -ldflags="-s -w -linkmode=external -extldflags=-static-pie" ./cmd/authelia && \
     mkdir -p /var/lib/authelia/notifications /app && \
-    chown -R 65532:65532 /var/lib/authelia && \
-    cd .. && rm -r "authelia-${AUTHELIA_VERSION}"
+    chown -R 65532:65532 /var/lib/authelia
 
 
 ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
-COPY --from=builder-backend /busybox/bin/* /bin/
-COPY --from=builder-backend --chown=nonroot:nonroot /app /app
-COPY --from=builder-backend /go/bin/authelia /healthcheck /app/
-COPY --from=builder-backend --chown=nonroot:nonroot /var/lib/authelia /var/lib/authelia
+USER root
 
-COPY --chown=nonroot:nonroot ./healthcheck.env /app/.healthcheck.env
+COPY --from=builder /usr/local/src/authelia/authelia /app/
+COPY --from=builder-other /busybox/bin/wget /bin/
+COPY --from=builder-other /healthcheck /app/
+COPY --from=builder --chown=nonroot:nonroot /app /app
+COPY --from=builder --chown=nonroot:nonroot /var/lib/authelia /var/lib/authelia
+
+COPY ./healthcheck.env /app/.healthcheck.env
 COPY ./configuration.yml /etc/authelia.yml
 
 USER nonroot
+
 ENTRYPOINT ["/app/authelia"]
 EXPOSE 9959
 ENV X_AUTHELIA_CONFIG="/etc/authelia.yml"

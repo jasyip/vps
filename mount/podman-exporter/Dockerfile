@@ -8,7 +8,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     wget -qO - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/${PODMAN_EXPORTER_VERSION}.tar.gz" | \
         tar -xzf - --strip-components 1 && \
-    CGO_ENABLED=0 go build -ldflags="-s -w" --tags containers_image_openpgp -o /podman-exporter . && \
+    CGO_ENABLED=0 go build -buildmode=pie -trimpath -ldflags="-s -w" --tags containers_image_openpgp -o /podman-exporter . && \
     rm -rf *
 
 
