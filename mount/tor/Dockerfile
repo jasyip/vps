@@ -1,10 +1,6 @@
 ARG ALPINE_VERSION
-FROM alpine:$ALPINE_VERSION as builder
+FROM alpine:$ALPINE_VERSION AS builder
 
-ARG ZLIB_VERSION
-ARG LIBEVENT_VERSION
-ARG OPENSSL_VERSION
-ARG TOR_VERSION
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add \
       gcc \
@@ -18,8 +14,11 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
       zstd-dev \
       zstd-static
 
-ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -pie -Wl,-z,relro,-z,now -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -fuse-ld=mold"
-ARG LDFLAGS="-s -w"
+ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -fuse-ld=mold -fPIE -pie"
+ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+ARG LIBEVENT_VERSION
+ARG OPENSSL_VERSION
+ARG ZLIB_VERSION
 
 RUN mkdir zlib && cd zlib && \
     wget -qO - "https://zlib.net/zlib-${ZLIB_VERSION}.tar.xz" | \
@@ -28,7 +27,7 @@ RUN mkdir zlib && cd zlib && \
       --prefix="$(pwd)/install" \
       --static \
     && \
-    CFLAGS="$CFLAGS -fPIE -pie" make -j$(nproc) install && \
+    mold -run make -j$(nproc) install && \
     cd .. && \
     mkdir libevent && cd libevent && \ 
     wget -qO - "https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-2.1.12-stable.tar.gz" | \
@@ -38,7 +37,7 @@ RUN mkdir zlib && cd zlib && \
            --enable-static \
            --with-pic \
     && \
-    make -j$(nproc) install && \
+    mold -run make -j$(nproc) install && \
     cd .. && \
     mkdir openssl && cd openssl && \
     wget -qO - https://www.openssl.org/source/openssl-${OPENSSL_VERSION}.tar.gz | \
@@ -65,15 +64,16 @@ RUN mkdir zlib && cd zlib && \
       no-weak-ssl-ciphers \
       linux-x86_64 \
     && \
-    make install_sw && \
+    mold -run make install_sw && \
     apk del --no-cache --no-network \
       perl \
       linux-headers \
       openssl-dev
 
-WORKDIR tor
+ARG TOR_VERSION
 
-RUN wget -qO - "https://dist.torproject.org/tor-$TOR_VERSION.tar.gz" | \
+RUN mkdir tor && cd tor && \
+    wget -qO - "https://dist.torproject.org/tor-$TOR_VERSION.tar.gz" | \
       tar -xzf - --strip-components 1 && \
     ./configure \
       --prefix="$(pwd)/install" \
@@ -93,32 +93,35 @@ RUN wget -qO - "https://dist.torproject.org/tor-$TOR_VERSION.tar.gz" | \
       --disable-module-relay \
       --enable-zstd \
       && \
-    make -j$(nproc) install && \
+    mold -run make -j$(nproc) install && \
     apk del --no-cache --no-network \
-      gcc \
+      clang \
       libc-dev \
       mold \
       make \
       zstd-dev \
       zstd-static
 
+ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
 USER root
 
-COPY --from=builder /tor/install/bin/tor /usr/sbin/setcap /bin/busybox /bin/
-COPY --from=builder /lib/ld-musl-x86_64.so.1 /usr/lib/libcap.so.2 /lib/
+COPY --from=builder /tor/install/bin/tor /bin/
 
-SHELL ["/bin/busybox", "sh", "-c"]
-
-RUN setcap cap_net_bind_service=+ep /bin/tor && \
-    busybox install -Dd -o nonroot -g nonroot -m700 /etc/tor /var/lib/tor && \
-    for i in hostname hs_ed25519_secret_key hs_ed25519_public_key; do \
-      busybox ln -s "/run/secrets/$i" /var/lib/tor || exit; \
-    done && \
-    busybox rm -- /lib/* /bin/setcap /bin/busybox
-
-SHELL [""]
+RUN --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=builder \
+    --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=builder \
+    --mount=target=/bin/busybox,source=/bin/busybox,from=builder \
+    --mount=target=/bin/setcap,source=/usr/sbin/setcap,from=builder \
+    ["busybox", "sh", "-c", "\
+      setcap cap_net_bind_service=+ep /bin/tor && \
+      busybox install -Dd -o nonroot -g nonroot -m750 /var/lib/tor && \
+      busybox install -Dd -g nonroot -m750 /etc/tor && \
+      for i in hostname hs_ed25519_secret_key hs_ed25519_public_key; do \
+        busybox ln -s \"/run/secrets/$i\" /var/lib/tor || exit; \
+      done \
+      " \
+    ]
 
 USER nonroot
 
