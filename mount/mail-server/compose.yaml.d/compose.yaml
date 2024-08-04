@@ -8,7 +8,9 @@ services:
       args:
         MAIL_SERVER_VERSION: "$VERSION_MAIL_SERVER"
         DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
-        CARGO_CHEF_VERSION: "$VERSION_MAIL_SERVER_CARGO_CHEF"
+        MUSLRUST_VERSION: "$VERSION_BUILDER_MUSLRUST"
+        ALPINE_VERSION: "$VERSION_BUILDER_ALPINE"
+        RUSTFLAGS: "-C link-arg=-fuse-ld=mold -C relocation-model=pie -C strip=symbols -C target-feature=+crt-static -C lto=thin"
       tags:
         - "${COMPOSE_PROJECT_NAME}/mail-server:${VERSION_MAIL_SERVER}"
     environment:

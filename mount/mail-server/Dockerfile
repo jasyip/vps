@@ -1,75 +1,60 @@
-ARG CARGO_CHEF_VERSION
-FROM lukemathwalker/cargo-chef:$CARGO_CHEF_VERSION AS chef
+ARG MUSLRUST_VERSION
+ARG ALPINE_VERSION
+ARG DISTROLESS_SUFFIX
+FROM clux/muslrust:${MUSLRUST_VERSION}-stable AS builder
+
 WORKDIR /app
-
-
-FROM busybox:musl as source
 ARG MAIL_SERVER_VERSION
-RUN mkdir /source && \
+RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > \
+      /etc/apt/apt.conf.d/keep-cache && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends mold protobuf-compiler make wget && \
     wget -qO - \
         "https://github.com/stalwartlabs/mail-server/archive/refs/tags/${MAIL_SERVER_VERSION}.tar.gz" | \
-        tar -xzf - -C /source --strip-components 1
+        tar -xzf - --strip-components 1
 
-
-FROM chef AS planner
-COPY --from=source /source .
-RUN cargo chef prepare --recipe-path recipe.json
-
-
-FROM chef AS builder 
-COPY --from=planner /app/recipe.json recipe.json
-
-# Build dependencies - this is the caching Docker layer!
-ARG RUSTFLAGS="-C link-arg=-fuse-ld=mold"
+ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 RUN --mount=type=cache,target=/app/target \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends --no-upgrade \
-        libcap2-bin busybox \
-        protobuf-compiler mold make \
-        libfindbin-libs-perl && \
-    apt-get clean autoclean && apt-get autoremove --yes && \
-    bash -c 'rm -rf /var/lib/{apt,dpkg,cache,log}' && \
-    RUSTFLAGS="$RUSTFLAGS" cargo chef cook --release --locked \
-        --no-default-features --features=postgres \
-        --recipe-path recipe.json
-# Build application
-COPY --from=source /source .
+    --mount=type=cache,target=/app/cache \
+    exec cargo fetch --locked --color=always
+
+ARG RUSTFLAGS
 RUN --mount=type=cache,target=/app/target \
+    --mount=type=cache,target=/app/cache \
     --network=none \
-    RUSTFLAGS="$RUSTFLAGS" cargo build --release \
-        --locked --no-default-features --features=postgres \
+    cargo build --color=always --release --bins \
+        --frozen --no-default-features --features=postgres \
         -p mail-server -p stalwart-cli && \
-    find /app/target/release/stalwart-* -executable -exec \
-        install -Dm755 -t /app/binaries '{}' \+
+    find /app/target/**/release/stalwart-* -executable -exec \
+        install -Dm755 -s -t /app/binaries '{}' \+
 
-ARG DISTROLESS_SUFFIX
-FROM gcr.io/distroless/cc${DISTROLESS_SUFFIX}:nonroot
+FROM alpine:${ALPINE_VERSION} AS supplementary
 
-COPY --from=builder \
-    /app/binaries/ \
-    /bin/busybox \
-    /bin/find \
-    /sbin/setcap \
-    /bin/
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    exec apk add libcap-setcap
 
-COPY --from=builder \
-    /lib/x86_64-linux-gnu/libcap.so.* \
-    /lib/x86_64-linux-gnu/libpsx.so.* \
-    /lib/x86_64-linux-gnu/libselinux.so.* \
-    /lib/x86_64-linux-gnu/libpcre2-8.so.* \
-    /lib/
+FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
+
+COPY --from=builder /app/binaries/ /usr/bin/
+
+USER root
+
+COPY ./etc/ /opt/stalwart-mail/etc/
 
 SHELL ["busybox", "sh", "-c"]
-USER root
-COPY ./etc/ /opt/stalwart-mail/etc/
-RUN --network=none \
-    echo /bin/stalwart-* | busybox xargs -n 1 setcap cap_net_bind_service=+ep && \
+
+RUN --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=supplementary \
+    --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=supplementary \
+    --mount=target=/bin/busybox,source=/bin/busybox,from=supplementary \
+    --mount=target=/bin/setcap,source=/usr/sbin/setcap,from=supplementary \
+    setcap cap_net_bind_service=+ep /usr/bin/stalwart-mail && \
     busybox chown nonroot /opt/stalwart-mail && \
-    find /opt/stalwart-mail/etc -type d -exec busybox chmod 755 '{}' \+ \
-        -o -type f -exec busybox chmod 644 '{}' \+ && \
-    busybox rm /bin/busybox /bin/find /bin/setcap \
-        /lib/libcap.so.* /lib/libpsx.so.* \
-        /lib/libselinux.so.* /lib/libpcre2-8.so.*
+    busybox find /opt/stalwart-mail/etc -type d -exec busybox chmod 755 \{\} \+ \
+        -o -type f -exec busybox chmod 644 \{\} \+
+
 SHELL [""]
 
 USER nonroot
