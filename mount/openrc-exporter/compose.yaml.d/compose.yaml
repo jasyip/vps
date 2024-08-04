@@ -7,7 +7,7 @@ services:
       context: ..
       args:
         OPENRC_EXPORTER_VERSION: "$VERSION_OPENRC_EXPORTER"
-        GO_BUILDER_VERSION: "$VERSION_BUILDER_GO"
+        GO_BUILDER_VERSION: "${VERSION_BUILDER_GO}-alpine${VERSION_BUILDER_ALPINE}"
       tags:
         - "${COMPOSE_PROJECT_NAME}/openrc-exporter:${VERSION_OPENRC_EXPORTER}"
     volumes:

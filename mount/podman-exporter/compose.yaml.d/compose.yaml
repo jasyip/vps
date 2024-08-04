@@ -6,7 +6,7 @@ services:
     build:
       context: ..
       args:
-        GO_BUILDER_VERSION: "$VERSION_BUILDER_GO"
+        GO_BUILDER_VERSION: "${VERSION_BUILDER_GO}-alpine${VERSION_BUILDER_ALPINE}"
         PODMAN_EXPORTER_VERSION: "$VERSION_PODMAN_EXPORTER"
       tags:
         - "${COMPOSE_PROJECT_NAME}/podman-exporter:${VERSION_PODMAN_EXPORTER}"
