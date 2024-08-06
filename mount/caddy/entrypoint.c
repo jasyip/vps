@@ -1,10 +1,6 @@
-#define _GNU_SOURCE
-
-#include <assert.h>    // for assert
-#include <stdbool.h>   // for false
-#include <stdio.h>     // for perror, fputs, stderr, fclose, ferror, fflush
-#include <stdlib.h>    // for exit, malloc, secure_getenv
-#include <string.h>    // for memcpy, strlen, strstr
+#include <stdio.h>     // for perror, fputs, stderr, fclose, fflush
+#include <stdlib.h>    // for exit, getenv
+#include <string.h>    // for memmove, strlen, strstr
 #include <unistd.h>    // for execvp
 
 
@@ -24,12 +20,12 @@ int main(int argc, char* argv[])
             perror("Error reading config file");
             goto exit;
       }
-      char const *const subdomain = secure_getenv("MX_SUBDOMAIN");
+      char const *const subdomain = getenv("MX_SUBDOMAIN");
       if (!subdomain || !subdomain[0]) {
             fputs("ERROR: $MX_SUBDOMAIN is missing or empty\n", stderr);
             goto close_f;
       }
-      char const *const domain = secure_getenv("DOMAIN");
+      char const *const domain = getenv("DOMAIN");
       if (!domain || !domain[0]) {
             fputs("ERROR: $DOMAIN is missing or empty\n", stderr);
             goto close_f;
@@ -52,16 +48,10 @@ close_f:
             goto exit;
       }
 
-      char const **const exec_args = malloc(argc * sizeof(char *));
-      if (!exec_args) {
-            perror("Error allocating memory for exec args");
-            goto exit;
-      }
-      exec_args[0] = BINARY;
-      memcpy(exec_args + 1, argv + 2, (argc - 2) * sizeof(char *));
-      exec_args[argc] = NULL;
       fflush(stderr);
-      execvp(BINARY, (char *const *)exec_args);
+      argv[0] = BINARY;
+      memmove(argv + 1, argv + 2, (argc - 1) * sizeof(char *));
+      execvp(BINARY, argv);
       perror("Error executing " BINARY);
 
 exit:
