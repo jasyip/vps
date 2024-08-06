@@ -175,7 +175,7 @@ if [ ! -e "/etc/crowdsec/local_api_credentials.yaml" ] && [ ! -e "/etc/crowdsec/
         mkdir -p /etc/crowdsec/
         # if you change this, check that it still works
         # under alpine and k8s, with and without tls
-        cp -rn /staging/etc/crowdsec/* /etc/crowdsec
+        cp -av --update=none /staging/etc/crowdsec /etc
     fi
 fi
 
