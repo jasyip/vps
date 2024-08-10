@@ -2,8 +2,8 @@ ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder
 
 WORKDIR /go/src/exporter
-ARG CFLAGS="-O2 -march=native -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -flto -fPIE -pie"
-ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+ARG CFLAGS
+ARG LDFLAGS
 ARG OPENRC_EXPORTER_VERSION
 
 RUN --mount=type=cache,target=/go/pkg/mod \

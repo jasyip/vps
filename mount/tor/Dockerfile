@@ -14,8 +14,8 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
       zstd-dev \
       zstd-static
 
-ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -fuse-ld=mold -fPIE -pie"
-ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+ARG CFLAGS
+ARG LDFLAGS
 ARG LIBEVENT_VERSION
 ARG OPENSSL_VERSION
 ARG ZLIB_VERSION

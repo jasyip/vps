@@ -7,15 +7,16 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
 FROM builder-base AS builder-other
 
 ARG BUSYBOX_VERSION
-ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -flto -fPIE -pie"
-ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+ARG CFLAGS
+ARG LDFLAGS
 
 WORKDIR /usr/local/src/busybox
 RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2" | \
-        tar -xkjf - --strip-components 1 && \
+    tar -xkjf - --strip-components 1 && \
+    sed -i 's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' Makefile.flags && \
     make allnoconfig && \
     sleep 1 && \
-    sed -i 's/^.*CONFIG_\(STATIC\|INSTALL_NO_USR\|DESKTOP\|LONG_OPTS\|SH_IS_NONE\|WGET\|FEATURE_WGET_LONG_OPTIONS\|FEATURE_WGET_TIMEOUT\|USE_PORTABLE_CODE\)[ =].*$/CONFIG_\1=y/' .config && \
+    sed -i 's/^.*\(CONFIG_\(STATIC\|INSTALL_NO_USR\|DESKTOP\|LONG_OPTS\|SH_IS_NONE\|WGET\|FEATURE_WGET_LONG_OPTIONS\|FEATURE_WGET_TIMEOUT\)\)[ =].*$/\1=y/' .config && \
     sed -i 's/^.*\(CONFIG_SH_IS_ASH\)[ =].*$/\1=n/' .config && \
     sed -i 's/^.*\(CONFIG_PREFIX\)[ =].*$/\1="\/busybox"/' .config && \
     sed -i "s/^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$/\1=\"$CFLAGS\"/" .config && \
@@ -40,8 +41,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
         tar -C internal/server -xzf - && \
     exec go mod download
 
-ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -flto -fPIE -pie"
-ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+ARG CFLAGS
+ARG LDFLAGS
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
