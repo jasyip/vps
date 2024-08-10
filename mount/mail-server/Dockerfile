@@ -1,7 +1,7 @@
 ARG MUSLRUST_VERSION
 ARG ALPINE_VERSION
 ARG DISTROLESS_SUFFIX
-FROM clux/muslrust:${MUSLRUST_VERSION}-stable AS builder
+FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
 
 WORKDIR /app
 ARG MAIL_SERVER_VERSION
@@ -17,13 +17,12 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
         tar -xzf - --strip-components 1
 
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
-RUN --mount=type=cache,target=/app/target \
-    --mount=type=cache,target=/app/cache \
+RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     exec cargo fetch --locked --color=always
 
 ARG RUSTFLAGS
 RUN --mount=type=cache,target=/app/target \
-    --mount=type=cache,target=/app/cache \
+    --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --network=none \
     cargo build --color=always --release --bins \
         --frozen --no-default-features --features=postgres \

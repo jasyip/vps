@@ -9,7 +9,7 @@ services:
         LLDAP_VERSION: "$VERSION_LLDAP"
         MUSLRUST_VERSION: "$VERSION_BUILDER_MUSLRUST"
         DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
-        RUSTFLAGS: "-C relocation-model=pie -C strip=symbols -C target-feature=+crt-static"
+        RUSTFLAGS: "-C relocation-model=pie -C strip=symbols -C codegen-units=1 -C target-feature=+crt-static"
       tags:
         - "${COMPOSE_PROJECT_NAME}/lldap:${VERSION_LLDAP}"
     volumes:

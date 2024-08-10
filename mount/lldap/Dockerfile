@@ -1,6 +1,6 @@
 ARG MUSLRUST_VERSION
 ARG DISTROLESS_SUFFIX
-FROM clux/muslrust:${MUSLRUST_VERSION}-stable AS builder
+FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
 
 WORKDIR /app
 ARG LLDAP_VERSION
@@ -22,7 +22,7 @@ ARG RUSTFLAGS
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 # Cannot cache build target due to hard link requirements by rustup
 # unfortunately, so must 
-RUN --mount=type=cache,target=/root/.cargo/registry/cache \
+RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --mount=type=cache,target=/tmp/cargo/wasm-pack \
     RUSTFLAGS="-C strip=symbols" cargo install --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack --bin wasm-pack wasm-pack && \
     cargo fetch --color always --locked && \
@@ -32,7 +32,7 @@ RUN --mount=type=cache,target=/root/.cargo/registry/cache \
     xargs -a fonts/fonts.txt wget --no-hsts -nv -P fonts -- && rm fonts/fonts.txt
 
 RUN --mount=type=cache,target=/app/target \
-    --mount=type=cache,target=/root/.cargo/registry/cache \
+    --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --network=none \
     cargo build --color always --release --frozen --bins \
         -p lldap -p lldap_migration_tool -p lldap_set_password && \
@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/app/target \
 
 RUN --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cache/.wasm-pack \
-    --mount=type=cache,target=/root/.cargo/registry/cache \
+    --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     RUSTFLAGS="-C strip=symbols" wasm-pack build -t web --release --no-typescript app --color always --frozen --bins && \
     ( cd app/pkg && rm .gitignore package.json ) && \
     mv -f app/index_local.html app/index.html && \
