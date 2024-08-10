@@ -60,7 +60,8 @@ RUN --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=builder \
       "cd /bin && \
        /busybox ln -s busybox tail && \
        /busybox ln -s busybox tee && \
-       setcap cap_net_bind_service=+ep /bin/caddy \
+       setcap cap_net_bind_service=+ep /bin/caddy && \
+       /busybox mkdir -p /var/log/caddy \
       " \
      ]
 
