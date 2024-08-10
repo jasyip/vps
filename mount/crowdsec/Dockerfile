@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024 Jason Yip <general@jasonyip.slmail.me>
+# SPDX-License-Identifier: GPL-2.0-only
+
 ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 

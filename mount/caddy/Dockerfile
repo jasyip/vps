@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024 Jason Yip <general@jasonyip.slmail.me>
+# SPDX-License-Identifier: GPL-2.0-only
+
 ARG CADDY_VERSION
 FROM caddy:${CADDY_VERSION}-builder-alpine AS builder-base
 

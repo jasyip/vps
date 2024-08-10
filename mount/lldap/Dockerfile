@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024 Jason Yip <general@jasonyip.slmail.me>
+# SPDX-License-Identifier: GPL-3.0-only
+
 ARG MUSLRUST_VERSION
 ARG DISTROLESS_SUFFIX
 FROM clux/muslrust:${MUSLRUST_VERSION} AS builder

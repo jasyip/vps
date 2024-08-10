@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2024 Jason Yip <general@jasonyip.slmail.me>
+# SPDX-License-Identifier: AGPL-3.0-only
+
 ARG GRAFANA_VERSION
 FROM grafana/grafana-oss:${GRAFANA_VERSION}
 
