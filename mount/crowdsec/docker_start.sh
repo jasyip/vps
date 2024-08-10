@@ -171,12 +171,11 @@ if [ ! -e "/etc/crowdsec/local_api_credentials.yaml" ] && [ ! -e "/etc/crowdsec/
     echo "Populating configuration directory..."
     # don't overwrite existing configuration files, which may come
     # from bind-mount or even be read-only (configmaps)
-    if [ -e /staging/etc/crowdsec ]; then
-        mkdir -p /etc/crowdsec/
-        # if you change this, check that it still works
-        # under alpine and k8s, with and without tls
-        cp -av --update=none /staging/etc/crowdsec /etc
-    fi
+    if [ -e /staging/etc/crowdsec ]; then (
+        cd /staging/etc
+        find crowdsec -type d -exec mkdir -p -- '/etc/{}' \;
+        find crowdsec -type f -exec cp -an -- '{}' '/etc/{}' \;
+    ) fi
 fi
 
 # do this as soon as we have a config.yaml, to avoid useless warnings

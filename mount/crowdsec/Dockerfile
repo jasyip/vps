@@ -1,9 +1,29 @@
 ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
-
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add g++ libc-dev make bash gettext pkgconfig mold
+
+FROM builder-base AS builder-busybox
+
+WORKDIR /usr/local/src/busybox
+ARG BUSYBOX_VERSION
+ARG CFLAGS
+ARG LDFLAGS
+
+RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2" | \
+        tar -xkjf - --strip-components 1 && \
+    sed -i 's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' Makefile.flags && \
+    make allnoconfig && \
+    sleep 1 && \
+    sed -i 's/^.*\(CONFIG_\(STATIC\|INSTALL_NO_USR\|DESKTOP\|LONG_OPTS\|SH_IS_ASH\|ASH\|ASH_ECHO\|ASH_PRINTF\|ASH_TEST\|ASH_CMDCMD\|CAT\|CHOWN\|CP\|DIRNAME\|FIND\|GREP\|INSTALL\|LN\|MKDIR\|READLINK\|SED\|TR\|TRUE\|WGET\)\)[ =].*$/\1=y/' .config && \
+    sed -i 's/^.*\(CONFIG_FEATURE_\(USE_SENDFILE\|PRESERVE_HARDLINKS\|FIND_TYPE\|FIND_EXEC\|READLINK_FOLLOW\|TR_CLASSES\|WGET_LONG_OPTIONS\|WGET_TIMEOUT\)\)[ =].*$/\1=y/' .config && \
+    sed -i 's/^.*\(CONFIG_INSTALL_APPLET_SYMLINKS\)[ =].*$/\1=n/' .config && \
+    sed -i 's/^.*\(CONFIG_PREFIX\)[ =].*$/\1="\/busybox"/' .config && \
+    sed -i "s/^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$/\1=\"$CFLAGS\"/" .config && \
+    sed -i "s/^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$/\1=\"$LDFLAGS\"/" .config
+
+RUN --network=none mold -run make busybox && mold -run make install
 
 FROM builder-base AS builder-yq
 
@@ -15,8 +35,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
       tar -xzf - --strip-components 1 && \
     exec go mod download
 
-ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -fuse-ld=mold -flto -fPIE -pie"
-ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+ARG CFLAGS
+ARG LDFLAGS
 
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
@@ -26,8 +46,8 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 
 FROM builder-base AS builder
 
-ARG CFLAGS="-O2 -march=native -pipe -D_FORTIFY_SOURCE=2 -ftrivial-auto-var-init=pattern -fstack-protector-strong -fstack-clash-protection -fcf-protection=full -fuse-ld=mold -flto -fPIE -pie"
-ARG LDFLAGS="-Wl,-O1,--sort-common,-z,relro,-z,now"
+ARG CFLAGS
+ARG LDFLAGS
 ARG RE2_VERSION
 WORKDIR /usr/local/src/re2
 RUN wget -qO - "https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.tar.gz" | \
@@ -58,10 +78,11 @@ RUN ( cd crowdsec-v* && ./wizard.sh --docker-mode ) && \
     cscli parsers install crowdsecurity/whitelists
 
 ARG DISTROLESS_SUFFIX
-FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:debug-nonroot
+FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
 
 USER root
+COPY --from=builder-busybox /busybox/bin/busybox /usr/local/bin/
 COPY --from=builder-yq /usr/local/src/yq/yq /usr/local/bin/
 COPY --from=builder /usr/local/bin /usr/local/bin
 COPY --from=builder /etc/crowdsec /staging/etc/crowdsec
@@ -70,15 +91,23 @@ COPY --chmod=444 ./docker_start.sh /
 COPY ./config.yaml.local /staging/etc/crowdsec/
 COPY ./acquis.d /staging/etc/crowdsec/acquis.d
 
-SHELL ["/busybox/sh", "-c"]
-
-RUN mkdir -p /staging/etc/crowdsec/acquis.d \
+SHELL ["/busybox", "sh", "-c"]
+RUN --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=builder \
+    --mount=target=/busybox,source=/bin/busybox,from=builder \
+    cd /usr/local/bin && \
+    for i in cat chown cp dirname find grep install ln mkdir readlink sed sh tr true wget; do \
+      /busybox ln -s busybox "$i"  || exit ; \
+    done && \
+    mkdir -p /staging/etc/crowdsec/acquis.d \
              /staging/var/lib/crowdsec \
              /etc/crowdsec \
-             /var/lib/crowdsec/data && \
-    chown -R nonroot:nonroot /etc/crowdsec /var/lib/crowdsec /staging && \
+             /var/lib/crowdsec/data \
+             /var/log/crowdsec && \
+    chown -R nonroot:nonroot /etc/crowdsec /var/*/crowdsec /staging && \
     yq -n '.url="http://0.0.0.0:8080"' | install -m600 -o nonroot -g nonroot /dev/stdin /staging/etc/crowdsec/local_api_credentials.yaml && \
     yq eval -i '.plugin_config.group = "nogroup"' /staging/etc/crowdsec/config.yaml
+
+SHELL [""]
 
 USER nonroot
 
@@ -86,4 +115,4 @@ USER nonroot
 EXPOSE 6060
 HEALTHCHECK CMD wget -q --spider localhost:8080/health || exit 1
 ENTRYPOINT ["sh", "/docker_start.sh"]
-VOLUME /etc/crowdsec /var/lib/crowdsec/data /var/log
+VOLUME /etc/crowdsec /var/lib/crowdsec/data /var/log/crowdsec

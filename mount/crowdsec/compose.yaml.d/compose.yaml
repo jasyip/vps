@@ -11,6 +11,9 @@ services:
         DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
         YQ_VERSION: "$VERSION_CROWDSEC_YQ"
         RE2_VERSION: "$VERSION_CROWDSEC_RE2"
+        CFLAGS: "$CFLAGS"
+        LDFLAGS: "$LDFLAGS"
+        BUSYBOX_VERSION: "$VERSION_BUILDER_BUSYBOX"
       tags:
         - "${COMPOSE_PROJECT_NAME}/crowdsec:${VERSION_CROWDSEC}"
     environment:
@@ -28,7 +31,7 @@ services:
       - caddy_logs:/run/log/caddy:ro
       - crowdsec_config:/etc/crowdsec
       - crowdsec_data:/var/lib/crowdsec/data
-      - crowdsec_logs:/var/log
+      - crowdsec_logs:/var/log/crowdsec
       - type: bind
         source: /var/log/sshd.log
         target: /run/log/host/sshd.log
