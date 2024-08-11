@@ -9,8 +9,7 @@ ARG OPENRC_EXPORTER_VERSION
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    PKGS="openrc-dev openrc-static gcc libc-dev" && \
-    apk add $PKGS && \
+    apk add gcc mold libc-dev fortify-headers openrc-dev openrc-static && \
     wget -qO - "https://git.sr.ht/~tomleb/openrc-exporter/archive/${OPENRC_EXPORTER_VERSION}.tar.gz" | \
         tar -xzf - --strip-components 1 && \
     cd cmd/openrc-exporter && \
@@ -19,7 +18,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
-    exec go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /openrc-exporter ./cmd/openrc-exporter
+    exec mold -run go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /openrc-exporter ./cmd/openrc-exporter
 
 FROM scratch
 

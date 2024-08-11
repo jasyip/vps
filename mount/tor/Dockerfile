@@ -2,12 +2,7 @@ ARG ALPINE_VERSION
 FROM alpine:$ALPINE_VERSION AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add \
-        gcc \
-        mold \
-        make \
-        libc-dev \
-        linux-headers
+    apk add gcc mold make libc-dev fortify-headers linux-headers
 
 
 FROM builder-base AS builder-zlib
@@ -33,7 +28,7 @@ WORKDIR /usr/local/src/openssl
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add perl && \
     wget -qO - "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" | \
-        tar -xzf - --strip-components 1 && \ 
+        tar -xzf - --strip-components 1 && \
     ./Configure \
         --prefix="$(pwd)/install" \
         no-shared \

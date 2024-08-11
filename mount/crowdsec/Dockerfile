@@ -5,7 +5,7 @@ ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add g++ libc-dev make bash gettext pkgconfig mold
+    apk add g++ make mold libc-dev fortify-headers bash gettext pkgconfig 
 
 FROM builder-base AS builder-busybox
 
@@ -22,9 +22,9 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
     sed -i 's/^.*\(CONFIG_\(STATIC\|INSTALL_NO_USR\|DESKTOP\|LONG_OPTS\|SH_IS_ASH\|ASH\|ASH_ECHO\|ASH_PRINTF\|ASH_TEST\|ASH_CMDCMD\|CAT\|CHOWN\|CP\|DIRNAME\|FIND\|GREP\|INSTALL\|LN\|MKDIR\|READLINK\|SED\|TR\|TRUE\|WGET\)\)[ =].*$/\1=y/' .config && \
     sed -i 's/^.*\(CONFIG_FEATURE_\(USE_SENDFILE\|PRESERVE_HARDLINKS\|FIND_TYPE\|FIND_EXEC\|READLINK_FOLLOW\|TR_CLASSES\|WGET_LONG_OPTIONS\|WGET_TIMEOUT\)\)[ =].*$/\1=y/' .config && \
     sed -i 's/^.*\(CONFIG_INSTALL_APPLET_SYMLINKS\)[ =].*$/\1=n/' .config && \
-    sed -i 's/^.*\(CONFIG_PREFIX\)[ =].*$/\1="\/busybox"/' .config && \
-    sed -i "s/^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$/\1=\"$CFLAGS\"/" .config && \
-    sed -i "s/^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$/\1=\"$LDFLAGS\"/" .config
+    sed -i 's%^.*\(CONFIG_PREFIX\)[ =].*$%\1="/busybox"%' .config && \
+    sed -i "s%^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$%\1=\"$CFLAGS\"%" .config && \
+    sed -i "s%^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$%\1=\"$LDFLAGS\"%" .config
 
 RUN --network=none mold -run make busybox && mold -run make install
 
