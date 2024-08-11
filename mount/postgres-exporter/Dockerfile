@@ -5,7 +5,7 @@ ARG CFLAGS
 ARG LDFLAGS
 ARG POSTGRES_EXPORTER_VERSION
 WORKDIR /go/src/exporter
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add gcc mold libc-dev fortify-headers && \
@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
     cd cmd/postgres_exporter && \
     exec go mod download
 
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \

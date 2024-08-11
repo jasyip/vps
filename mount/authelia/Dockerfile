@@ -35,7 +35,7 @@ FROM builder-base AS builder
 WORKDIR /usr/local/src/authelia
 
 ARG AUTHELIA_VERSION
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     wget -qO - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
         tar -xzf - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum) && \
     mv api internal/server/public_html/api && \
@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \

@@ -33,7 +33,7 @@ FROM builder-base AS builder-yq
 WORKDIR /usr/local/src/yq
 
 ARG YQ_VERSION
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     wget -qO - "https://github.com/mikefarah/yq/archive/refs/tags/v${YQ_VERSION}.tar.gz" | \
       tar -xzf - --strip-components 1 && \
     exec go mod download
@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/go/pkg/mod \
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
@@ -61,12 +61,12 @@ WORKDIR /usr/local/src/crowdsec
 
 
 ARG CROWDSEC_VERSION
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     wget -qO - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/${CROWDSEC_VERSION}.tar.gz" | \
       tar -xzf - --strip-components 1 && \
     exec go mod download
 
-RUN --mount=type=cache,target=/go/pkg/mod \
+RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     export CFLAGS="$CFLAGS -D_LARGEFILE64_SOURCE" && \
