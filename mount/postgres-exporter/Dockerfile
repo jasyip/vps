@@ -6,7 +6,6 @@ ARG LDFLAGS
 ARG POSTGRES_EXPORTER_VERSION
 WORKDIR /go/src/exporter
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add gcc mold libc-dev fortify-headers && \
     wget -qO - "https://github.com/prometheus-community/postgres_exporter/archive/refs/tags/${POSTGRES_EXPORTER_VERSION}.tar.gz" | \
@@ -14,8 +13,8 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     cd cmd/postgres_exporter && \
     exec go mod download
 
-RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/go/pkg/mod,ro \
+    --mount=type=cache,target=/root/.cache/go-build,sharing=private \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
     exec mold -run go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /postgres-exporter ./cmd/postgres_exporter

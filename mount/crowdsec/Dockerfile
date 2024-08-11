@@ -41,8 +41,8 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/go/pkg/mod,ro \
+    --mount=type=cache,target=/root/.cache/go-build,sharing=private \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
     exec mold -run go build -buildmode=pie -trimpath -ldflags="-s -w -linkmode=external -extldflags=-static-pie" .
@@ -66,8 +66,8 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
       tar -xzf - --strip-components 1 && \
     exec go mod download
 
-RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/go/pkg/mod,ro \
+    --mount=type=cache,target=/root/.cache/go-build,sharing=private \
     --network=none \
     export CFLAGS="$CFLAGS -D_LARGEFILE64_SOURCE" && \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \

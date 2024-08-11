@@ -7,7 +7,6 @@ ARG LDFLAGS
 ARG OPENRC_EXPORTER_VERSION
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add gcc mold libc-dev fortify-headers openrc-dev openrc-static && \
     wget -qO - "https://git.sr.ht/~tomleb/openrc-exporter/archive/${OPENRC_EXPORTER_VERSION}.tar.gz" | \
@@ -15,8 +14,8 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     cd cmd/openrc-exporter && \
     exec go mod download
 
-RUN --mount=type=cache,target=/go/pkg/mod,ro,sharing=shared \
-    --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/go/pkg/mod,ro \
+    --mount=type=cache,target=/root/.cache/go-build,sharing=private \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
     exec mold -run go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /openrc-exporter ./cmd/openrc-exporter
