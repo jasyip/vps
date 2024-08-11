@@ -26,8 +26,7 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
     sed -i "s%^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$%\1=\"$LDFLAGS\"%" .config
 
 RUN --mount=target=healthcheck.c,source=healthcheck.c \
-    mold -run make busybox && \
-    mold -run make install && \
+    mold -run make busybox && make install && \
     exec cc $CFLAGS -s -static-pie -o /healthcheck healthcheck.c
 
 

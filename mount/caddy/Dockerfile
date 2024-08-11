@@ -28,8 +28,7 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
 
 RUN --mount=target=entrypoint.c,source=entrypoint.c \
     --network=none \
-    mold -run make busybox && \
-    mold -run make install && \
+    mold -run make busybox && make install && \
     exec cc $CFLAGS -s -static-pie -o /entrypoint entrypoint.c
 
 FROM builder-base AS builder
