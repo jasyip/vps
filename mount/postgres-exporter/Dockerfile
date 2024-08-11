@@ -1,14 +1,24 @@
 ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder
 
+ARG CFLAGS
+ARG LDFLAGS
 ARG POSTGRES_EXPORTER_VERSION
 WORKDIR /go/src/exporter
 RUN --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    apk add gcc mold libc-dev fortify-headers && \
     wget -qO - "https://github.com/prometheus-community/postgres_exporter/archive/refs/tags/${POSTGRES_EXPORTER_VERSION}.tar.gz" | \
         tar -xzf - --strip-components 1 && \
-    CGO_ENABLED=0 go build -buildmode=pie -trimpath -ldflags="-s -w" -o /postgres-exporter ./cmd/postgres_exporter && \
-    rm -rf *
+    cd cmd/postgres_exporter && \
+    exec go mod download
+
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    --network=none \
+    CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
+    exec mold -run go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /postgres-exporter ./cmd/postgres_exporter
 
 
 FROM scratch
