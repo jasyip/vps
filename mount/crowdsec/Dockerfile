@@ -85,21 +85,21 @@ FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
 
 USER root
-COPY --from=builder-busybox /busybox/bin/busybox /usr/local/bin/
-COPY --from=builder-yq /usr/local/src/yq/yq /usr/local/bin/
-COPY --from=builder /usr/local/bin /usr/local/bin
+COPY --from=builder-busybox /busybox/bin/busybox /usr/sbin/
+COPY --from=builder-yq /usr/local/src/yq/yq /usr/bin/
+COPY --from=builder /usr/local/bin /usr/bin
 COPY --from=builder /etc/crowdsec /staging/etc/crowdsec
 COPY --from=builder /usr/local/src/crowdsec/docker/config.yaml /staging/etc/crowdsec/
 COPY --chmod=444 ./docker_start.sh /
 COPY ./config.yaml.local /staging/etc/crowdsec/
 COPY ./acquis.d /staging/etc/crowdsec/acquis.d
 
-SHELL ["/busybox", "sh", "-c"]
+SHELL ["busybox", "sh", "-c"]
 RUN --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=builder \
-    --mount=target=/busybox,source=/bin/busybox,from=builder \
-    cd /usr/local/bin && \
+    --mount=target=/usr/sbin/busybox,source=/bin/busybox,from=builder \
+    cd /usr/sbin && \
     for i in cat chown cp dirname find grep install ln mkdir readlink sed sh tr true wget; do \
-      /busybox ln -s busybox "$i"  || exit ; \
+      busybox ln -s busybox "$i" || exit ; \
     done && \
     mkdir -p /staging/etc/crowdsec/acquis.d \
              /staging/var/lib/crowdsec \

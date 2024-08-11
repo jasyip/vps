@@ -62,7 +62,7 @@ FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 USER root
 
 COPY --from=builder /usr/local/src/authelia/authelia /app/
-COPY --from=builder-other /busybox/bin/wget /bin/
+COPY --from=builder-other /busybox/bin/wget /usr/sbin/
 COPY --from=builder-other /healthcheck /app/
 COPY --from=builder --chown=nonroot:nonroot /app /app
 COPY --from=builder --chown=nonroot:nonroot /var/lib/authelia /var/lib/authelia

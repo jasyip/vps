@@ -52,19 +52,20 @@ RUN --mount=type=cache,target=/root/.cache/go-build \
 ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:latest
 
-COPY --from=builder /usr/bin/caddy /bin/
-COPY --from=builder-other /entrypoint /busybox/bin/busybox /bin/
+COPY --from=builder /usr/bin/caddy /usr/bin/
+COPY --from=builder-other /busybox/bin/busybox /usr/sbin/
+COPY --from=builder-other /entrypoint /usr/bin/
 
 RUN --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=builder \
     --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=builder \
-    --mount=target=/busybox,source=/bin/busybox,from=builder \
-    --mount=target=/bin/setcap,source=/usr/sbin/setcap,from=builder \
-     ["/busybox", "sh", "-c", \
-      "cd /bin && \
-       /busybox ln -s busybox tail && \
-       /busybox ln -s busybox tee && \
-       setcap cap_net_bind_service=+ep /bin/caddy && \
-       /busybox mkdir -p /var/log/caddy \
+    --mount=target=/usr/sbin/busybox,source=/bin/busybox,from=builder \
+    --mount=target=/usr/sbin/setcap,source=/usr/sbin/setcap,from=builder \
+     ["busybox", "sh", "-c", \
+      "cd /usr/sbin && \
+       busybox ln -s busybox tail && \
+       busybox ln -s busybox tee && \
+       setcap cap_net_bind_service=+ep /usr/bin/caddy && \
+       busybox mkdir -p /var/log/caddy \
       " \
      ]
 

@@ -121,14 +121,14 @@ FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
 USER root
 
-COPY --from=builder /usr/local/src/tor/install/bin/tor /bin/
+COPY --from=builder /usr/local/src/tor/install/bin/tor /usr/bin/
 
 RUN --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=builder \
     --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=builder \
-    --mount=target=/bin/busybox,source=/bin/busybox,from=builder \
-    --mount=target=/bin/setcap,source=/usr/sbin/setcap,from=builder \
+    --mount=target=/usr/local/sbin/busybox,source=/bin/busybox,from=builder \
+    --mount=target=/usr/local/sbin/setcap,source=/usr/sbin/setcap,from=builder \
     ["busybox", "sh", "-c", "\
-      setcap cap_net_bind_service=+ep /bin/tor && \
+      setcap cap_net_bind_service=+ep /usr/bin/tor && \
       busybox install -Dd -o nonroot -g nonroot -m750 /var/lib/tor && \
       busybox install -Dd -g nonroot -m750 /etc/tor && \
       for i in hostname hs_ed25519_secret_key hs_ed25519_public_key; do \

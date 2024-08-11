@@ -50,8 +50,8 @@ SHELL ["busybox", "sh", "-c"]
 
 RUN --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=supplementary \
     --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=supplementary \
-    --mount=target=/bin/busybox,source=/bin/busybox,from=supplementary \
-    --mount=target=/bin/setcap,source=/usr/sbin/setcap,from=supplementary \
+    --mount=target=/usr/local/sbin/busybox,source=/bin/busybox,from=supplementary \
+    --mount=target=/usr/local/sbin/setcap,source=/usr/sbin/setcap,from=supplementary \
     setcap cap_net_bind_service=+ep /usr/bin/stalwart-mail && \
     busybox chown nonroot /opt/stalwart-mail && \
     busybox find /opt/stalwart-mail/etc -type d -exec busybox chmod 755 \{\} \+ \
