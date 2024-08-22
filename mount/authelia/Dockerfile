@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 ARG GO_BUILDER_VERSION
+ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
@@ -55,7 +56,6 @@ RUN --mount=type=cache,target=/go/pkg/mod,ro \
     chown -R 65532:65532 /var/lib/authelia
 
 
-ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
 USER root

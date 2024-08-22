@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 ARG CADDY_VERSION
+ARG DISTROLESS_SUFFIX
 FROM caddy:${CADDY_VERSION}-builder-alpine AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
@@ -48,7 +49,6 @@ RUN --mount=type=cache,target=/root/.cache/go-build,sharing=private \
     --with "github.com/fvbommel/caddy-dns-ip-range@${DNS_IP_RANGE_VERSION}"
 
 
-ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:latest
 
 COPY --from=builder /usr/bin/caddy /usr/bin/

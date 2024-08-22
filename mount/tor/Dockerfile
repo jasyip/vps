@@ -1,4 +1,5 @@
 ARG ALPINE_VERSION
+ARG DISTROLESS_SUFFIX
 FROM alpine:$ALPINE_VERSION AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
@@ -116,7 +117,6 @@ RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib 
     --network=none \
     mold -run make -j$(nproc) install && strip install/bin/tor
 
-ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
 USER root

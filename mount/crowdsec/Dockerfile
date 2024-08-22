@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: GPL-2.0-only
 
 ARG GO_BUILDER_VERSION
+ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
@@ -75,12 +76,12 @@ RUN --mount=type=cache,target=/go/pkg/mod,ro \
          EXTLDFLAGS="-extldflags=-static-pie -linkmode=external" DISABLE_OPTIMIZATION="-buildmode=pie" \
          BUILD_VERSION="$CROWDSEC_VERSION" PLUGINS="dummy email file http"
 
+
 RUN ( cd crowdsec-v* && ./wizard.sh --docker-mode ) && \
     cscli hub update && \
     cscli collections install crowdsecurity/linux && \
     cscli parsers install crowdsecurity/whitelists
 
-ARG DISTROLESS_SUFFIX
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
 
