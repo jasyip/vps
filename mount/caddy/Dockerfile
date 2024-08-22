@@ -39,7 +39,7 @@ ARG DNS_IP_RANGE_VERSION
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/root/.cache/go-build,sharing=private \
+RUN --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s -linkmode=external -extldflags=-static-pie' -buildmode=pie -trimpath" \
     XCADDY_SKIP_CLEANUP=0 XCADDY_SUDO=0 \

@@ -9,12 +9,12 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add gcc mold libc-dev fortify-headers && \
     wget -qO - "https://github.com/prometheus-community/postgres_exporter/archive/refs/tags/${POSTGRES_EXPORTER_VERSION}.tar.gz" | \
-        tar -xzf - --strip-components 1 && \
+        tar -xzof - --strip-components 1 && \
     cd cmd/postgres_exporter && \
     exec go mod download
 
 RUN --mount=type=cache,target=/go/pkg/mod,ro \
-    --mount=type=cache,target=/root/.cache/go-build,sharing=private \
+    --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
     exec mold -run go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /postgres-exporter ./cmd/postgres_exporter
