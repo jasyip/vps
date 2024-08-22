@@ -18,7 +18,7 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get install -y --no-install-recommends libssl-dev make brotli zstd gzip wget && \
     wget -qO - \
         "https://github.com/lldap/lldap/archive/refs/tags/v${LLDAP_VERSION}.tar.gz" | \
-        tar -xzf - --strip-components 1 && \
+        tar -xzof - --strip-components 1 && \
     patch -p0 -i /*.patch
 
 ARG RUSTFLAGS

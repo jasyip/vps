@@ -16,7 +16,7 @@ ARG LDFLAGS
 
 WORKDIR /usr/local/src/busybox
 RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2" | \
-    tar -xkjf - --strip-components 1 && \
+      tar -xjof - --strip-components 1 && \
     sed -i 's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' Makefile.flags && \
     make allnoconfig && \
     sleep 1 && \
@@ -38,10 +38,10 @@ WORKDIR /usr/local/src/authelia
 ARG AUTHELIA_VERSION
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     wget -qO - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
-        tar -xzf - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum) && \
+      tar -xzof - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum) && \
     mv api internal/server/public_html/api && \
     wget -qO - "https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz" | \
-        tar -C internal/server -xzf - && \
+      tar -C internal/server -xzof - && \
     exec go mod download
 
 ARG CFLAGS

@@ -15,9 +15,8 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
       /etc/apt/apt.conf.d/keep-cache && \
     apt-get update && \
     apt-get install -y --no-install-recommends mold protobuf-compiler make wget && \
-    wget -qO - \
-        "https://github.com/stalwartlabs/mail-server/archive/refs/tags/${MAIL_SERVER_VERSION}.tar.gz" | \
-        tar -xzf - --strip-components 1
+    wget -qO - "https://github.com/stalwartlabs/mail-server/archive/refs/tags/${MAIL_SERVER_VERSION}.tar.gz" | \
+      tar -xzof - --strip-components 1
 
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \

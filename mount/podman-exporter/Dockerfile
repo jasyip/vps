@@ -9,7 +9,7 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add gcc mold libc-dev fortify-headers linux-headers btrfs-progs-dev && \
     wget -qO - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/${PODMAN_EXPORTER_VERSION}.tar.gz" | \
-        tar -xzf - --strip-components 1 && \
+        tar -xzof - --strip-components 1 && \
     exec go mod download
 
 RUN --mount=type=cache,target=/go/pkg/mod,ro \

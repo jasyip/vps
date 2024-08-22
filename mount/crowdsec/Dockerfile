@@ -16,7 +16,7 @@ ARG CFLAGS
 ARG LDFLAGS
 
 RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2" | \
-        tar -xkjf - --strip-components 1 && \
+        tar -xjof - --strip-components 1 && \
     sed -i 's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' Makefile.flags && \
     make allnoconfig && \
     sleep 1 && \
@@ -36,7 +36,7 @@ WORKDIR /usr/local/src/yq
 ARG YQ_VERSION
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     wget -qO - "https://github.com/mikefarah/yq/archive/refs/tags/v${YQ_VERSION}.tar.gz" | \
-      tar -xzf - --strip-components 1 && \
+      tar -xzof - --strip-components 1 && \
     exec go mod download
 
 ARG CFLAGS
@@ -55,7 +55,7 @@ ARG LDFLAGS
 ARG RE2_VERSION
 WORKDIR /usr/local/src/re2
 RUN wget -qO - "https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.tar.gz" | \
-      tar -xzf - --strip-components 1
+      tar -xzof - --strip-components 1
 RUN CXXFLAGS="$CFLAGS" exec mold -run make static-install
 
 WORKDIR /usr/local/src/crowdsec
@@ -64,7 +64,7 @@ WORKDIR /usr/local/src/crowdsec
 ARG CROWDSEC_VERSION
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     wget -qO - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/${CROWDSEC_VERSION}.tar.gz" | \
-      tar -xzf - --strip-components 1 && \
+      tar -xzof - --strip-components 1 && \
     exec go mod download
 
 RUN --mount=type=cache,target=/go/pkg/mod,ro \

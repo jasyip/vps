@@ -17,7 +17,7 @@ ARG LDFLAGS
 WORKDIR /usr/local/src/busybox
 
 RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2" | \
-        tar -xkjf - --strip-components 1 && \
+      tar -xjof - --strip-components 1 && \
     sed -i 's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' Makefile.flags && \
     make allnoconfig && \
     sleep 1 && \
