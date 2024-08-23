@@ -19,7 +19,7 @@ RUN --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
     wget -qO - \
         "https://github.com/lldap/lldap/archive/refs/tags/v${LLDAP_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1 && \
-    patch -p0 -i /*.patch
+    echo /*.patch | xargs -n 1 patch -p0 -i
 
 ARG RUSTFLAGS
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
