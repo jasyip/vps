@@ -6,16 +6,16 @@ ARG DISTROLESS_SUFFIX
 FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
 
 WORKDIR /app
-ARG LLDAP_VERSION
 RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
-    # --mount=target=/any_encoding.patch,source=any_encoding.patch \
     rm -f /etc/apt/apt.conf.d/docker-clean && \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > \
       /etc/apt/apt.conf.d/keep-cache && \
     apt-get update && \
-    apt-get install -y --no-install-recommends libssl-dev make brotli zstd gzip wget && \
+    exec apt-get install -y --no-install-recommends libssl-dev brotli zstd gzip wget
+
+ARG LLDAP_VERSION
+RUN --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
     wget -qO - \
         "https://github.com/lldap/lldap/archive/refs/tags/v${LLDAP_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1 && \
@@ -32,10 +32,11 @@ RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     cd app/static && \
     rustup target add wasm32-unknown-unknown && \
     xargs -a libraries.txt wget --no-hsts -nv -- && rm libraries.txt && \
-    xargs -a fonts/fonts.txt wget --no-hsts -nv -P fonts -- && rm fonts/fonts.txt
+    xargs -a fonts/fonts.txt wget --no-hsts -nv -P fonts -- && rm fonts/fonts.txt && \
+    mkdir /data
 
 RUN --mount=type=cache,target=/app/target \
-    --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
+    --mount=type=cache,target=/root/.cargo/registry/cache,ro \
     --network=none \
     cargo build --color always --release --frozen --bins \
         -p lldap -p lldap_migration_tool -p lldap_set_password && \
@@ -52,8 +53,7 @@ RUN --mount=type=cache,target=/app/target \
         find app -type f -name "*.$i" -exec sh -c \
             'brotli -Zf -- "$@" && zstd -9f -- "$@" && gzip -9kf -- "$@"' \
             sh \{\} \+ || exit; \
-    done && \ 
-    mkdir /data
+    done
 
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 

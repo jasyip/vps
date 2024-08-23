@@ -3,7 +3,7 @@ ARG DISTROLESS_SUFFIX
 FROM alpine:$ALPINE_VERSION AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add gcc mold make libc-dev fortify-headers linux-headers
+    exec apk add ccache gcc mold make libc-dev fortify-headers linux-headers
 
 
 FROM builder-base AS builder-zlib
@@ -14,23 +14,25 @@ ARG ZLIB_VERSION
 WORKDIR /usr/local/src/zlib
 RUN wget -qO - "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1 && \
-    ./configure --prefix="$(pwd)/install" --static
+    exec ./configure --prefix="$(pwd)/install" --static
 
-RUN --network=none mold -run make -j$(nproc) install
+RUN --network=none \
+    exec mold -run make -j$(nproc) install
 
 
 FROM builder-base AS builder-openssl
+
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    exec apk add perl
 
 ARG CFLAGS
 ARG LDFLAGS
 ARG OPENSSL_VERSION
 WORKDIR /usr/local/src/openssl
 
-RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add perl && \
-    wget -qO - "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" | \
+RUN wget -qO - "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1 && \
-    ./Configure \
+    exec ./Configure \
         --prefix="$(pwd)/install" \
         no-shared \
         no-dso \
@@ -53,31 +55,40 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
         no-weak-ssl-ciphers \
         linux-x86_64
 
-RUN --network=none mold -run make install_sw
+RUN --network=none \
+    exec mold -run make install_dev
 
 
 FROM builder-base AS builder-libevent
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    exec apk add file
 
 ARG CFLAGS
 ARG LDFLAGS
 ARG LIBEVENT_VERSION
 WORKDIR /usr/local/src/libevent
-RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
-    apk add file && \
-    wget -qO - "https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-2.1.12-stable.tar.gz" | \
+
+RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
+    wget -qO - "https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-${LIBEVENT_VERSION}-stable.tar.gz" | \
       tar -xzof - --strip-components 1 && \
-    PKG_CONFIG_PATH="$(pwd)/openssl/lib64/pkgconfig" LDFLAGS="$LDFLAGS -L$(pwd)/openssl/lib64" CPPFLAGS="-I$(pwd)/openssl/include" ./configure \
+    PKG_CONFIG_PATH="$(pwd)/openssl/lib64/pkgconfig" \
+    LDFLAGS="$LDFLAGS -L$(pwd)/openssl/lib64" \
+    CPPFLAGS="-I$(pwd)/openssl/include" \
+    exec ./configure \
         --prefix="$(pwd)/install" \
         --disable-shared \
         --enable-static \
         --with-pic
 
 RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
-    --network=none mold -run make -j$(nproc) install
+    --network=none \
+    exec mold -run make -j$(nproc) install
 
 
 FROM builder-base as builder
+
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    exec apk add libcap-setcap zstd-dev zstd-static
 
 ARG CFLAGS
 ARG LDFLAGS
@@ -87,12 +98,11 @@ WORKDIR /usr/local/src/tor
 RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib \
     --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
     --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
-    --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add libcap-setcap zstd-dev zstd-static && \
     wget -qO - "https://dist.torproject.org/tor-$TOR_VERSION.tar.gz" | \
         tar -xzof - --strip-components 1 && \
     ./configure --help && \
-    CPPFLAGS="-I$(pwd)/zlib/include -I$(pwd)/openssl/include -I$(pwd)/libevent/include" ./configure \
+    CPPFLAGS="-I$(pwd)/zlib/include -I$(pwd)/openssl/include -I$(pwd)/libevent/include" \
+    ./configure \
         --prefix="$(pwd)/install" \
         --disable-gcc-warnings-advisory \
         --disable-gcc-hardening \
@@ -115,7 +125,8 @@ RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib 
     --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
     --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
     --network=none \
-    mold -run make -j$(nproc) install && strip install/bin/tor
+    mold -run make -j$(nproc) install && \
+    strip install/bin/tor
 
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 

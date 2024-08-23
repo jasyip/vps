@@ -1,17 +1,20 @@
 ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder
 
-ARG CFLAGS
-ARG LDFLAGS
-ARG POSTGRES_EXPORTER_VERSION
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    exec apk add gcc mold libc-dev fortify-headers
+
 WORKDIR /go/src/exporter
+ARG POSTGRES_EXPORTER_VERSION
+
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add gcc mold libc-dev fortify-headers && \
     wget -qO - "https://github.com/prometheus-community/postgres_exporter/archive/refs/tags/${POSTGRES_EXPORTER_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1 && \
     cd cmd/postgres_exporter && \
     exec go mod download
+
+ARG CFLAGS
+ARG LDFLAGS
 
 RUN --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
