@@ -1,0 +1,23 @@
+services:
+  dendrite:
+    extends:
+      file: ${MODE}.yaml
+      service: dendrite
+    build:
+      context: ..
+      args:
+        DENDRITE_VERSION: "$VERSION_DENDRITE"
+        GO_BUILDER_VERSION: "${VERSION_BUILDER_GO}-alpine${VERSION_BUILDER_ALPINE}"
+        DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
+        CFLAGS: "$CFLAGS"
+        LDFLAGS: "$LDFLAGS"
+      tags:
+        - "${COMPOSE_PROJECT_NAME}/dendrite:${VERSION_DENDRITE}"
+    ports:
+      - 8008:8008
+      - 8448:8448
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
