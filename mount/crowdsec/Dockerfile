@@ -6,7 +6,11 @@ ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    exec apk add g++ make mold libc-dev fortify-headers bash gettext pkgconfig 
+    exec apk add ccache g++ make mold libc-dev fortify-headers bash gettext pkgconfig
+
+COPY ccache.conf /etc/
+
+RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 FROM builder-base AS builder-busybox
 
@@ -27,7 +31,8 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
     sed -i "s%^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$%\1=\"$CFLAGS\"%" .config && \
     sed -i "s%^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$%\1=\"$LDFLAGS\"%" .config
 
-RUN --network=none \
+RUN --mount=type=cache,target=/var/ccache \
+    --network=none \
     mold -run make busybox && make install
 
 FROM builder-base AS builder-yq
@@ -43,7 +48,8 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/go/pkg/mod,ro \
+RUN --mount=type=cache,target=/var/ccache \
+    --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
@@ -58,7 +64,8 @@ RUN wget -qO - "https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.t
 
 ARG CFLAGS
 ARG LDFLAGS
-RUN --network=none \
+RUN --mount=type=cache,target=/var/ccache \
+    --network=none \
     exec mold -run make CXXFLAGS="$CFLAGS" static-install
 
 WORKDIR /usr/local/src/crowdsec
@@ -70,7 +77,8 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
       tar -xzof - --strip-components 1 && \
     exec go mod download
 
-RUN --mount=type=cache,target=/go/pkg/mod,ro \
+RUN --mount=type=cache,target=/var/ccache \
+    --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     export CFLAGS="$CFLAGS -D_LARGEFILE64_SOURCE" && \

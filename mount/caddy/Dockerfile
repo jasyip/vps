@@ -6,7 +6,11 @@ ARG DISTROLESS_SUFFIX
 FROM caddy:${CADDY_VERSION}-builder-alpine AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    exec apk add gcc make mold libc-dev fortify-headers libcap-setcap
+    exec apk add ccache gcc make mold libc-dev fortify-headers libcap-setcap
+
+COPY ccache.conf /etc/
+
+RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 FROM builder-base AS builder-other
 
@@ -27,7 +31,8 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
     sed -i "s%^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$%\1=\"$CFLAGS\"%" .config && \
     sed -i "s%^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$%\1=\"$LDFLAGS\"%" .config
 
-RUN --mount=target=entrypoint.c,source=entrypoint.c \
+RUN --mount=type=cache,target=/var/ccache \
+    --mount=target=entrypoint.c,source=entrypoint.c \
     --network=none \
     mold -run make busybox && make install && \
     exec cc $CFLAGS -s -static-pie -o /entrypoint entrypoint.c
@@ -39,7 +44,8 @@ ARG DNS_IP_RANGE_VERSION
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/root/.cache/go-build \
+RUN --mount=type=cache,target=/var/ccache \
+    --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s -linkmode=external -extldflags=-static-pie' -buildmode=pie -trimpath" \
     XCADDY_SKIP_CLEANUP=0 XCADDY_SUDO=0 \

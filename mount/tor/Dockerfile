@@ -5,6 +5,9 @@ FROM alpine:$ALPINE_VERSION AS builder-base
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     exec apk add ccache gcc mold make libc-dev fortify-headers linux-headers
 
+COPY ccache.conf /etc/
+
+RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 FROM builder-base AS builder-zlib
 
@@ -16,7 +19,8 @@ RUN wget -qO - "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION
         tar -xzof - --strip-components 1 && \
     exec ./configure --prefix="$(pwd)/install" --static
 
-RUN --network=none \
+RUN --mount=type=cache,target=/var/ccache \
+    --network=none \
     exec mold -run make -j$(nproc) install
 
 
@@ -55,7 +59,8 @@ RUN wget -qO - "https://github.com/openssl/openssl/archive/refs/tags/openssl-${O
         no-weak-ssl-ciphers \
         linux-x86_64
 
-RUN --network=none \
+RUN --mount=type=cache,target=/var/ccache \
+    --network=none \
     exec mold -run make install_dev
 
 
@@ -80,7 +85,8 @@ RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder
         --enable-static \
         --with-pic
 
-RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
+RUN --mount=type=cache,target=/var/ccache \
+    --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
     --network=none \
     exec mold -run make -j$(nproc) install
 
@@ -124,6 +130,7 @@ RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib 
 RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib \
     --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
     --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
+    --mount=type=cache,target=/var/ccache \
     --network=none \
     mold -run make -j$(nproc) install && \
     strip install/bin/tor

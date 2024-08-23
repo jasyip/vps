@@ -6,7 +6,11 @@ ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    exec apk add gcc make mold libc-dev fortify-headers
+    exec apk add ccache gcc make mold libc-dev fortify-headers
+
+COPY ccache.conf /etc/
+
+RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 FROM builder-base AS builder-other
 
@@ -26,7 +30,8 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
     sed -i "s%^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$%\1=\"$CFLAGS\"%" .config && \
     sed -i "s%^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$%\1=\"$LDFLAGS\"%" .config
 
-RUN --mount=target=healthcheck.c,source=healthcheck.c \
+RUN --mount=type=cache,target=/var/ccache \
+    --mount=target=healthcheck.c,source=healthcheck.c \
     --network=none \
     mold -run make busybox && make install && \
     exec cc $CFLAGS -s -static-pie -o /healthcheck healthcheck.c
@@ -49,7 +54,8 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/go/pkg/mod,ro \
+RUN --mount=type=cache,target=/var/ccache \
+    --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
