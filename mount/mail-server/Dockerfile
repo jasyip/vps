@@ -15,6 +15,13 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     exec apt-get install -y --no-install-recommends mold protobuf-compiler make wget
 
+ARG SCCACHE_VERSION
+
+RUN wget -qO - "https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" | \
+      tar -C /usr/local/bin -xzof - --strip-components 1 "sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl/sccache"
+
+COPY sccache.conf /root/.config/sccache/config
+
 ARG MAIL_SERVER_VERSION
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
@@ -23,10 +30,11 @@ RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     exec cargo fetch --locked --color=always
 
 ARG RUSTFLAGS
-RUN --mount=type=cache,target=/app/target \
+RUN --mount=type=cache,target=/var/sccache \
+    --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cargo/registry/cache,ro \
     --network=none \
-    cargo build --color=always --release --bins \
+    RUSTC_WRAPPER=sccache cargo build --color=always --release --bins \
         --frozen --no-default-features --features=postgres \
         -p mail-server -p stalwart-cli && \
     find /app/target/**/release/stalwart-* -executable -exec \

@@ -14,6 +14,13 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     apt-get update && \
     exec apt-get install -y --no-install-recommends libssl-dev brotli zstd gzip wget
 
+ARG SCCACHE_VERSION
+
+RUN wget -qO - "https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" | \
+      tar -C /usr/local/bin -xzof - --strip-components 1 "sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl/sccache"
+
+COPY sccache.conf /root/.config/sccache/config
+
 ARG LLDAP_VERSION
 RUN --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
     wget -qO - \
@@ -25,9 +32,11 @@ ARG RUSTFLAGS
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 # Cannot cache build target due to hard link requirements by rustup
 # unfortunately, so must 
-RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
+RUN --mount=type=cache,target=/var/sccache \
+    --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --mount=type=cache,target=/tmp/cargo/wasm-pack \
-    RUSTFLAGS="-C strip=symbols" cargo install --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack --bin wasm-pack wasm-pack && \
+    RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
+    cargo install --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack --bin wasm-pack wasm-pack && \
     cargo fetch --color always --locked && \
     cd app/static && \
     rustup target add wasm32-unknown-unknown && \
@@ -35,18 +44,21 @@ RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     xargs -a fonts/fonts.txt wget --no-hsts -nv -P fonts -- && rm fonts/fonts.txt && \
     mkdir /data
 
-RUN --mount=type=cache,target=/app/target \
+RUN --mount=type=cache,target=/var/sccache \
+    --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cargo/registry/cache,ro \
     --network=none \
-    cargo build --color always --release --frozen --bins \
+    RUSTC_WRAPPER=sccache cargo build --color always --release --frozen --bins \
         -p lldap -p lldap_migration_tool -p lldap_set_password && \
     find /app/target/**/release/lldap* ! -name '*.*' -executable -exec \
         install -Dm755 -s -t /app/bin '{}' \+
 
-RUN --mount=type=cache,target=/app/target \
+RUN --mount=type=cache,target=/var/sccache \
+    --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cache/.wasm-pack \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
-    RUSTFLAGS="-C strip=symbols" wasm-pack build -t web --release --no-typescript app --color always --frozen --bins && \
+    RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
+    wasm-pack build -t web --release --no-typescript app --color always --frozen --bins && \
     ( cd app/pkg && rm .gitignore package.json ) && \
     mv -f app/index_local.html app/index.html && \
     for i in js wasm css html; do \
