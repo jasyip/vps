@@ -1,0 +1,28 @@
+services:
+  monerod:
+    extends:
+      file: ${MODE}.yaml
+      service: monerod
+    build:
+      context: ..
+      args:
+        MONEROD_VERSION: "$VERSION_MONEROD"
+        ALPINE_VERSION: "$VERSION_BUILDER_ALPINE"
+        LIBEXPAT_VERSION: "$VERSION_BUILDER_LIBEXPAT"
+        LIBUNBOUND_VERSION: "$VERSION_BUILDER_LIBUNBOUND"
+        MINIUPNP_VERSION: "$VERSION_BUILDER_MINIUPNP"
+        RANDOMX_VERSION: "$VERSION_BUILDER_RANDOMX"
+        SUPERCOP_VERSION: "$VERSION_BUILDER_SUPERCOP"
+        DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
+        CFLAGS: "$CFLAGS"
+        LDFLAGS: "$LDFLAGS"
+      tags:
+        - "${COMPOSE_PROJECT_NAME}/monerod:${VERSION_MONEROD}"
+    ports:
+      - 18080:18080
+      - 18081:18081
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

@@ -1,0 +1,16 @@
+---
++++ miniupnp.patch
+@@ -169,13 +169,6 @@
+  add_subdirectory(miniupnp/miniupnpc)
+  set_property(TARGET libminiupnpc-static PROPERTY FOLDER "external")
+  set_property(TARGET libminiupnpc-static PROPERTY POSITION_INDEPENDENT_CODE ON)
+-diff --git a/external/miniupnp b/external/miniupnp
+-index 544e6fcc73..b55145ec09 160000
+---- a/external/miniupnp
+-+++ b/external/miniupnp
+-@@ -1 +1 @@
+--Subproject commit 544e6fcc73c5ad9af48a8985c94f0f1d742ef2e0
+-+Subproject commit b55145ec095652289a59c33603f3abafee898273
+ diff --git a/src/p2p/net_node.inl b/src/p2p/net_node.inl
+ index 505ba026ea..50d2063ea3 100644
+ --- a/src/p2p/net_node.inl
