@@ -6,7 +6,7 @@ ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add gcc make mold libc-dev fortify-headers
+    exec apk add gcc make mold libc-dev fortify-headers
 
 FROM builder-base AS builder-other
 
@@ -27,6 +27,7 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
     sed -i "s%^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$%\1=\"$LDFLAGS\"%" .config
 
 RUN --mount=target=healthcheck.c,source=healthcheck.c \
+    --network=none \
     mold -run make busybox && make install && \
     exec cc $CFLAGS -s -static-pie -o /healthcheck healthcheck.c
 
@@ -42,6 +43,7 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     mv api internal/server/public_html/api && \
     wget -qO - "https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz" | \
       tar -C internal/server -xzof - && \
+    mkdir -p /var/lib/authelia/notifications /app && \
     exec go mod download
 
 ARG CFLAGS
@@ -51,9 +53,7 @@ RUN --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
-    go build -buildmode=pie -trimpath -ldflags="-s -w -linkmode=external -extldflags=-static-pie" ./cmd/authelia && \
-    mkdir -p /var/lib/authelia/notifications /app && \
-    chown -R 65532:65532 /var/lib/authelia
+    exec go build -buildmode=pie -trimpath -ldflags="-s -w -linkmode=external -extldflags=-static-pie" ./cmd/authelia
 
 
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot

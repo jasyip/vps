@@ -6,7 +6,7 @@ ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add g++ make mold libc-dev fortify-headers bash gettext pkgconfig 
+    exec apk add g++ make mold libc-dev fortify-headers bash gettext pkgconfig 
 
 FROM builder-base AS builder-busybox
 
@@ -27,7 +27,8 @@ RUN wget -qO - "https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2
     sed -i "s%^.*\(CONFIG_EXTRA_CFLAGS\)[ =].*$%\1=\"$CFLAGS\"%" .config && \
     sed -i "s%^.*\(CONFIG_EXTRA_LDFLAGS\)[ =].*$%\1=\"$LDFLAGS\"%" .config
 
-RUN --network=none mold -run make busybox && mold -run make install
+RUN --network=none \
+    mold -run make busybox && make install
 
 FROM builder-base AS builder-yq
 
@@ -50,13 +51,15 @@ RUN --mount=type=cache,target=/go/pkg/mod,ro \
 
 FROM builder-base AS builder
 
-ARG CFLAGS
-ARG LDFLAGS
 ARG RE2_VERSION
 WORKDIR /usr/local/src/re2
 RUN wget -qO - "https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.tar.gz" | \
       tar -xzof - --strip-components 1
-RUN CXXFLAGS="$CFLAGS" exec mold -run make static-install
+
+ARG CFLAGS
+ARG LDFLAGS
+RUN --network=none \
+    exec mold -run make CXXFLAGS="$CFLAGS" static-install
 
 WORKDIR /usr/local/src/crowdsec
 

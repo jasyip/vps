@@ -7,24 +7,24 @@ ARG DISTROLESS_SUFFIX
 FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
 
 WORKDIR /app
-ARG MAIL_SERVER_VERSION
 RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean && \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > \
       /etc/apt/apt.conf.d/keep-cache && \
     apt-get update && \
-    apt-get install -y --no-install-recommends mold protobuf-compiler make wget && \
-    wget -qO - "https://github.com/stalwartlabs/mail-server/archive/refs/tags/${MAIL_SERVER_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1
+    exec apt-get install -y --no-install-recommends mold protobuf-compiler make wget
 
+ARG MAIL_SERVER_VERSION
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
+    wget -qO - "https://github.com/stalwartlabs/mail-server/archive/refs/tags/${MAIL_SERVER_VERSION}.tar.gz" | \
+      tar -xzof - --strip-components 1 && \
     exec cargo fetch --locked --color=always
 
 ARG RUSTFLAGS
 RUN --mount=type=cache,target=/app/target \
-    --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
+    --mount=type=cache,target=/root/.cargo/registry/cache,ro \
     --network=none \
     cargo build --color=always --release --bins \
         --frozen --no-default-features --features=postgres \

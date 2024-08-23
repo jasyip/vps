@@ -1,18 +1,21 @@
 ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder
 
+
+RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
+    exec apk add gcc mold libc-dev fortify-headers openrc-dev openrc-static
+
 WORKDIR /go/src/exporter
-ARG CFLAGS
-ARG LDFLAGS
 ARG OPENRC_EXPORTER_VERSION
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add gcc mold libc-dev fortify-headers openrc-dev openrc-static && \
     wget -qO - "https://git.sr.ht/~tomleb/openrc-exporter/archive/${OPENRC_EXPORTER_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1 && \
     cd cmd/openrc-exporter && \
     exec go mod download
+
+ARG CFLAGS
+ARG LDFLAGS
 
 RUN --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \

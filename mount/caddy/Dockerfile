@@ -6,7 +6,7 @@ ARG DISTROLESS_SUFFIX
 FROM caddy:${CADDY_VERSION}-builder-alpine AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add gcc make mold libc-dev fortify-headers libcap-setcap
+    exec apk add gcc make mold libc-dev fortify-headers libcap-setcap
 
 FROM builder-base AS builder-other
 
