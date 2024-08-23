@@ -1,0 +1,41 @@
+---
++++ CMakeLists.txt
+@@ -830,10 +830,6 @@
+   endif()
+ 
+   monero_enable_coverage()
+-  # With GCC 6.1.1 the compiled binary malfunctions due to aliasing. Until that
+-  # is fixed in the code (Issue #847), force compiler to be conservative.
+-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing")
+-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
+ 
+   # if those don't work for your compiler, single it out where appropriate
+   if(CMAKE_BUILD_TYPE STREQUAL "Release" AND NOT OPENBSD)
+@@ -918,14 +914,10 @@
+   message(STATUS "Using C++ security hardening flags: ${CXX_SECURITY_FLAGS}")
+   message(STATUS "Using linker security hardening flags: ${LD_SECURITY_FLAGS}")
+ 
+-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE ${MINGW_FLAG} ${STATIC_ASSERT_FLAG} ${WARNINGS} ${C_WARNINGS} ${PIC_FLAG} ${C_SECURITY_FLAGS}")
+-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GNU_SOURCE ${MINGW_FLAG} ${STATIC_ASSERT_CPP_FLAG} ${WARNINGS} ${CXX_WARNINGS} ${PIC_FLAG} ${CXX_SECURITY_FLAGS}")
+-  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LD_SECURITY_FLAGS} ${LD_BACKCOMPAT_FLAGS}")
+-
+-  # With GCC 6.1.1 the compiled binary malfunctions due to aliasing. Until that
+-  # is fixed in the code (Issue #847), force compiler to be conservative.
+-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-strict-aliasing")
+-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-strict-aliasing")
++  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D_GNU_SOURCE ${MINGW_FLAG} ${STATIC_ASSERT_FLAG} ${WARNINGS} ${C_WARNINGS}")
++  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GNU_SOURCE ${MINGW_FLAG} ${STATIC_ASSERT_CPP_FLAG} ${WARNINGS} ${CXX_WARNINGS}")
++  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LD_BACKCOMPAT_FLAGS}")
++  set(ICU_LIBRARIES icuuc icudata icui18n)
+ 
+   if(ARM)
+     message(STATUS "Setting FPU Flags for ARM Processors")
+@@ -1073,7 +1065,7 @@
+       # On Linux, we don't support fully static build, but these can be static
+       set(STATIC_FLAGS "-static-libgcc -static-libstdc++")
+     endif()
+-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${STATIC_FLAGS} ")
++    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-pie ")
+   endif()
+ endif()
+ 

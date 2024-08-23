@@ -12,6 +12,7 @@ include:
   - podman-exporter/compose.yaml.d/compose.yaml
   - postgres-exporter/compose.yaml.d/compose.yaml
   - mail-server/compose.yaml.d/compose.yaml
+  - monerod/compose.yaml.d/compose.yaml
   - prometheus/compose.yaml.d/compose.yaml
   - tor/compose.yaml.d/compose.yaml
 
