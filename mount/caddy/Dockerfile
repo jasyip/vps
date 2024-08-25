@@ -3,11 +3,12 @@ ARG DISTROLESS_SUFFIX
 FROM caddy:${CADDY_VERSION}-builder-alpine AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    exec apk add ccache gcc make mold libc-dev fortify-headers libcap-setcap
+    apk add moreutils gpg gpg-agent \
+            ccache gcc make mold \
+            libc-dev fortify-headers libcap-setcap && \
+    find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 COPY ccache.conf /etc/
-
-RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 FROM builder-base AS builder-other
 
@@ -16,10 +17,9 @@ ARG CFLAGS
 ARG LDFLAGS
 
 WORKDIR /usr/local/src/busybox
-
-
-RUN --mount=target=busybox-config.sh,ro,source=busybox-config.sh \
-    exec sh ./busybox-config.sh
+RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
+    --mount=target=busybox-config.sh,ro,source=busybox-config.sh \
+    . busybox-setup.sh
 
 RUN --mount=type=cache,target=/var/ccache \
     --mount=target=entrypoint.c,source=entrypoint.c \

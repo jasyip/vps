@@ -3,11 +3,21 @@ ARG DISTROLESS_SUFFIX
 FROM alpine:$ALPINE_VERSION AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    exec apk add ccache gcc mold make libc-dev fortify-headers linux-headers
+    apk add moreutils gpg gpg-agent \
+            ccache gcc mold make \
+            libc-dev fortify-headers linux-headers && \
+    find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 COPY ccache.conf /etc/
 
-RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
+RUN gpg --fetch-keys \
+      "https://madler.net/madler/pgp.html" \
+      "https://keys.openpgp.org/vks/v1/by-fingerprint/BA5473A2B0587B07FB27CF2D216094DFD0CB81EF" \
+      "https://www.wangafu.net/~nickm/public_key.asc" \
+      "https://azat.sh/azatpub.asc" \
+      "https://keys.openpgp.org/vks/v1/by-fingerprint/1C1BC007A9F607AA8152C040BEA7B180B1491921" \
+      "https://keys.openpgp.org/vks/v1/by-fingerprint/B74417EDDF22AC9F9E90F49142E86A2A11F48D36" \
+      "https://keys.openpgp.org/vks/v1/by-fingerprint/2133BC600AB133E1D826D173FE43009C4607B1FB"
 
 FROM builder-base AS builder-zlib
 
@@ -15,9 +25,12 @@ ARG CFLAGS
 ARG LDFLAGS
 ARG ZLIB_VERSION
 WORKDIR /usr/local/src/zlib
-RUN wget -qO - "https://github.com/madler/zlib/archive/refs/tags/v${ZLIB_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1 && \
-    exec ./configure --prefix="$(pwd)/install" --static
+RUN URL="https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.xz" && \
+    wget -qO - "$URL" | pee 'tar -xJof - --strip-components 1' cat | \
+      gpg --assert-signer 5ED46A6721D365587791E2AA783FCD8E58BCAFBA \
+          --lock-never --verify <(wget -qO - "${URL}.asc") -
+
+RUN exec ./configure --prefix="$(pwd)/install" --static
 
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
@@ -34,8 +47,11 @@ ARG LDFLAGS
 ARG OPENSSL_VERSION
 WORKDIR /usr/local/src/openssl
 
-RUN wget -qO - "https://github.com/openssl/openssl/archive/refs/tags/openssl-${OPENSSL_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1 && \
+RUN URL="https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz" && \
+    wget -qO - "$URL" | pee 'tar -xzof - --strip-components 1' \
+      "gpg --assert-signer BA5473A2B0587B07FB27CF2D216094DFD0CB81EF \
+           --lock-never --verify <(wget -qO - '${URL}.asc') -" cat | \
+      sha256sum -c <(wget -qO - "${URL}.sha256" | awk '{print $1 " -"}') && \
     exec ./Configure \
         --prefix="$(pwd)/install" \
         no-shared \
@@ -74,8 +90,11 @@ ARG LIBEVENT_VERSION
 WORKDIR /usr/local/src/libevent
 
 RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
-    wget -qO - "https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-${LIBEVENT_VERSION}-stable.tar.gz" | \
-      tar -xzof - --strip-components 1 && \
+    URL="https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-${LIBEVENT_VERSION}-stable.tar.gz" && \
+    wget -qO - "$URL" | pee 'tar -xzof - --strip-components 1' cat | \
+      gpg --assert-signer 2133BC600AB133E1D826D173FE43009C4607B1FB \
+          --assert-signer 9E3AC83A27974B84D1B3401DB86086848EF8686D \
+          --lock-never --verify <(wget -qO - "${URL}.asc") - && \
     PKG_CONFIG_PATH="$(pwd)/openssl/lib64/pkgconfig" \
     LDFLAGS="$LDFLAGS -L$(pwd)/openssl/lib64" \
     CPPFLAGS="-I$(pwd)/openssl/include" \
@@ -104,9 +123,14 @@ WORKDIR /usr/local/src/tor
 RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib \
     --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
     --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
-    wget -qO - "https://dist.torproject.org/tor-$TOR_VERSION.tar.gz" | \
-        tar -xzof - --strip-components 1 && \
-    ./configure --help && \
+    URL="https://dist.torproject.org/tor-$TOR_VERSION.tar.gz" && \
+    wget -qO - "$URL" | pee "tar -xzof - --strip-components 1" cat | \
+      sha256sum -c <(wget -qO - "${URL}.sha256sum" | pee \
+                       "gpg --assert-signer 514102454D0A87DB0767A1EBBE6A0531C18A9179 \
+                            --assert-signer B74417EDDF22AC9F9E90F49142E86A2A11F48D36 \
+                            --assert-signer 2133BC600AB133E1D826D173FE43009C4607B1FB \
+                            --lock-never --verify <(wget -qO - '${URL}.sha256sum.asc') -" \
+                       cat | awk '{print $1 " -"}') && \
     CPPFLAGS="-I$(pwd)/zlib/include -I$(pwd)/openssl/include -I$(pwd)/libevent/include" \
     ./configure \
         --prefix="$(pwd)/install" \
@@ -125,7 +149,8 @@ RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib 
         --enable-pic \
         --disable-module-relay \
         --enable-zstd && \
-    find -type f -name '*Makefile*' -exec sed -i 's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' '{}' \+
+    find -type f -name '*Makefile*' -exec sed -i \
+      's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' '{}' \+
 
 RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib \
     --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
