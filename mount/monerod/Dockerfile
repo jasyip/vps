@@ -62,26 +62,13 @@ RUN --mount=type=cache,target=/var/ccache \
 
 
 WORKDIR /usr/local/src/monerod
-COPY ./miniupnp.patch /
 
 ARG MONEROD_VERSION
-ARG RANDOMX_VERSION
-ARG SUPERCOP_VERSION
-ARG MINIUPNP_VERSION
 
 RUN --mount=target=/CMakeLists.txt.patch,ro,source=CMakeLists.txt.patch \
     --mount=target=/version-string.patch,ro,source=version-string.patch \
-    --mount=target=/miniupnp-no-git.patch,ro,source=miniupnp-no-git.patch \
-    wget -qO - "https://github.com/monero-project/monero/archive/refs/tags/v$MONEROD_VERSION.tar.gz" | \
-        tar -xzf - --strip-components 1 && \
-    wget -qO - "https://github.com/tevador/RandomX/archive/v$RANDOMX_VERSION.tar.gz" | \
-        tar -C external/randomx -xzof - --strip-components 1 && \
-    wget -qO - "https://github.com/monero-project/supercop/archive/$SUPERCOP_VERSION.tar.gz" | \
-        tar -C external/supercop -xzof - --strip-components 1 && \
-    wget -qO - "https://github.com/miniupnp/miniupnp/archive/refs/tags/miniupnpd_$(echo "$MINIUPNP_VERSION" | tr . _).tar.gz" | \
-        tar -C external/miniupnp -xzof - --strip-components 1 && \
-    patch -p0 -d / -i /miniupnp-no-git.patch && \
-    patch -p1 -i /miniupnp.patch && \
+    wget -qO - "https://downloads.getmonero.org/cli/monero-source-v${MONEROD_VERSION}.tar.bz2" | \
+      tar -xjof - --strip-components 1 && \
     patch -p1 -i /version-string.patch && \
     patch -p0 -i /CMakeLists.txt.patch && \
     mkdir -p /.bitmonero && \
