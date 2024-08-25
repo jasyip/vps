@@ -3,11 +3,10 @@ ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    exec apk add ccache gcc make mold libc-dev fortify-headers
+    apk add moreutils gpg gpg-agent ccache gcc make mold libc-dev fortify-headers && \
+    find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 COPY ccache.conf /etc/
-
-RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 FROM builder-base AS builder-other
 
@@ -16,8 +15,9 @@ ARG CFLAGS
 ARG LDFLAGS
 
 WORKDIR /usr/local/src/busybox
-RUN --mount=target=busybox-config.sh,ro,source=busybox-config.sh \
-    exec sh ./busybox-config.sh
+RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
+    --mount=target=busybox-config.sh,ro,source=busybox-config.sh \
+    . busybox-setup.sh
 
 RUN --mount=type=cache,target=/var/ccache \
     --mount=target=healthcheck.c,source=healthcheck.c \
@@ -34,9 +34,10 @@ ARG AUTHELIA_VERSION
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     wget -qO - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
       tar -xzof - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum) && \
-    mv api internal/server/public_html/api && \
-    wget -qO - "https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz" | \
-      tar -C internal/server -xzof - && \
+    HTML_URL="https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz" && \
+    wget -qO - "$HTML_URL" | pee 'tar -C internal/server -xzof -' cat | \
+      sha256sum -c <(wget -qO - "${HTML_URL}.sha256" | awk '{print $1 " -"}') && \
+    mv -f api/* -t internal/server/public_html/api && \
     mkdir -p /var/lib/authelia/notifications /app && \
     exec go mod download
 

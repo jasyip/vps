@@ -3,11 +3,12 @@ ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    exec apk add ccache g++ make mold libc-dev fortify-headers bash gettext pkgconfig
+    apk add moreutils gpg gpg-agent \
+       ccache g++ make mold libc-dev fortify-headers \
+       bash gettext pkgconfig && \
+    find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 COPY ccache.conf /etc/
-
-RUN find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 FROM builder-base AS builder-busybox
 
@@ -16,8 +17,9 @@ ARG BUSYBOX_VERSION
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=target=busybox-config.sh,ro,source=busybox-config.sh \
-    exec sh ./busybox-config.sh
+RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
+    --mount=target=busybox-config.sh,ro,source=busybox-config.sh \
+    . busybox-setup.sh
 
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
