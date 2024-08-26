@@ -10,7 +10,6 @@ WORKDIR /go/src/exporter
 ARG PODMAN_EXPORTER_VERSION
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    apk add gcc mold libc-dev fortify-headers linux-headers btrfs-progs-dev; \
     wget -O - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/${PODMAN_EXPORTER_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1; \
     exec go mod download
