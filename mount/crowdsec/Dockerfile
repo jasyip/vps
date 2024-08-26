@@ -32,9 +32,10 @@ FROM builder-base AS builder-yq
 WORKDIR /usr/local/src/yq
 
 ARG YQ_VERSION
+RUN wget -O - "https://github.com/mikefarah/yq/archive/refs/tags/v${YQ_VERSION}.tar.gz" | \
+      tar -xzof - --strip-components 1
+
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    wget -O - "https://github.com/mikefarah/yq/archive/refs/tags/v${YQ_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1; \
     exec go mod download
 
 ARG CFLAGS
@@ -64,9 +65,10 @@ WORKDIR /usr/local/src/crowdsec
 
 
 ARG CROWDSEC_VERSION
+RUN wget -O - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/${CROWDSEC_VERSION}.tar.gz" | \
+      tar -xzof - --strip-components 1
+
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    wget -O - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/${CROWDSEC_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1; \
     exec go mod download
 
 RUN --mount=type=cache,target=/var/ccache \

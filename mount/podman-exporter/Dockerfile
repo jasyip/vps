@@ -9,9 +9,10 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
 WORKDIR /go/src/exporter
 ARG PODMAN_EXPORTER_VERSION
 
+RUN wget -O - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/${PODMAN_EXPORTER_VERSION}.tar.gz" | \
+      tar -xzof - --strip-components 1
+
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    wget -O - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/${PODMAN_EXPORTER_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1; \
     exec go mod download
 
 ARG CFLAGS
