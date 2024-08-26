@@ -12,7 +12,7 @@ WORKDIR /app
 RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean; \
-    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >| \
       /etc/apt/apt.conf.d/keep-cache; \
     apt-get update; \
     exec apt-get install -y --no-install-recommends mold protobuf-compiler make wget
