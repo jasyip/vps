@@ -13,6 +13,12 @@ services:
         LDFLAGS: "$LDFLAGS"
       tags:
         - "${COMPOSE_PROJECT_NAME}/dendrite:${VERSION_DENDRITE}"
+    volumes:
+      - dendrite_data:/var/lib/dendrite
+      - dendrite_logs:/var/log/dendrite
+    secrets:
+      - source: dendrite_private_key
+        target: private_key
     ports:
       - 8008:8008
       - 8448:8448
@@ -21,3 +27,14 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+
+volumes:
+  dendrite_data:
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.dendrite.data
+  dendrite_logs:
+    name: ${COMPOSE_PROJECT_NAME}.${MODE}.dendrite.logs
+
+secrets:
+  dendrite_private_key:
+    file: ./secrets/private_key
+    name: ${COMPOSE_PROJECT_NAME}.dendrite.private_key
