@@ -2,10 +2,12 @@ ARG CADDY_VERSION
 ARG DISTROLESS_SUFFIX
 FROM caddy:${CADDY_VERSION}-builder-alpine AS builder-base
 
+SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
+
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add moreutils gpg gpg-agent \
+    apk add gpg gpg-agent \
             ccache gcc make mold \
-            libc-dev fortify-headers libcap-setcap && \
+            libc-dev fortify-headers libcap-setcap; \
     find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 COPY ccache.conf /etc/
@@ -24,7 +26,7 @@ RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
 RUN --mount=type=cache,target=/var/ccache \
     --mount=target=entrypoint.c,source=entrypoint.c \
     --network=none \
-    mold -run make busybox && make install && \
+    mold -run make busybox; make install; \
     exec cc $CFLAGS -s -static-pie -o /entrypoint entrypoint.c
 
 FROM builder-base AS builder
@@ -56,10 +58,10 @@ RUN --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=builder \
     --mount=target=/usr/sbin/busybox,source=/bin/busybox,from=builder \
     --mount=target=/usr/sbin/setcap,source=/usr/sbin/setcap,from=builder \
      ["busybox", "sh", "-c", \
-      "cd /usr/sbin && \
-       busybox ln -s busybox tail && \
-       busybox ln -s busybox tee && \
-       setcap cap_net_bind_service=+ep /usr/bin/caddy && \
+      "cd /usr/sbin; \
+       busybox ln -s busybox tail; \
+       busybox ln -s busybox tee; \
+       setcap cap_net_bind_service=+ep /usr/bin/caddy; \
        busybox mkdir -p /var/log/caddy \
       " \
      ]

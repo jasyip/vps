@@ -5,6 +5,8 @@ ARG GO_BUILDER_VERSION
 ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder
 
+SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
+
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     apk add gcc libc-dev mold fortify-headers
 
@@ -12,8 +14,9 @@ WORKDIR /usr/local/src/dendrite
 ARG DENDRITE_VERSION
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    wget -qO - "https://github.com/matrix-org/dendrite/archive/refs/tags/v${DENDRITE_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1 && \
+    wget -O - "https://github.com/matrix-org/dendrite/archive/refs/tags/v${DENDRITE_VERSION}.tar.gz" | \
+      tar -xzof - --strip-components 1; \
+    mkdir -p /var/lib/dendrite /var/log/dendrite; \
     exec go mod download
 
 ARG CFLAGS

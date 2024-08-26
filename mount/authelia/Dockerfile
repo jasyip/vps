@@ -2,8 +2,10 @@ ARG GO_BUILDER_VERSION
 ARG DISTROLESS_SUFFIX
 FROM golang:${GO_BUILDER_VERSION} AS builder-base
 
+SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
+
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add moreutils gpg gpg-agent ccache gcc make mold libc-dev fortify-headers && \
+    apk add gpg gpg-agent ccache gcc make mold libc-dev fortify-headers; \
     find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 COPY ccache.conf /etc/
@@ -22,7 +24,7 @@ RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
 RUN --mount=type=cache,target=/var/ccache \
     --mount=target=healthcheck.c,source=healthcheck.c \
     --network=none \
-    mold -run make busybox && make install && \
+    mold -run make busybox; make install; \
     exec cc $CFLAGS -s -static-pie -o /healthcheck healthcheck.c
 
 
@@ -32,13 +34,13 @@ WORKDIR /usr/local/src/authelia
 
 ARG AUTHELIA_VERSION
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    wget -qO - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum) && \
-    HTML_URL="https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz" && \
-    wget -qO - "$HTML_URL" | pee 'tar -C internal/server -xzof -' cat | \
-      sha256sum -c <(wget -qO - "${HTML_URL}.sha256" | awk '{print $1 " -"}') && \
-    mv -f api/* -t internal/server/public_html/api && \
-    mkdir -p /var/lib/authelia/notifications /app && \
+    wget -O - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
+      tar -xzof - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum); \
+    HTML_URL="https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz"; \
+    wget -O - "$HTML_URL" | tee >(tar -C internal/server -xzof -) | \
+      sha256sum -c <(wget -O - "${HTML_URL}.sha256" | awk '{print $1 " -"}'); \
+    mv -f api/* -t internal/server/public_html/api; \
+    mkdir -p /var/lib/authelia/notifications /app; \
     exec go mod download
 
 ARG CFLAGS
