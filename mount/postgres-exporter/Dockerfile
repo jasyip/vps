@@ -9,9 +9,10 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
 WORKDIR /go/src/exporter
 ARG POSTGRES_EXPORTER_VERSION
 
+RUN wget -O - "https://github.com/prometheus-community/postgres_exporter/archive/refs/tags/${POSTGRES_EXPORTER_VERSION}.tar.gz" | \
+        tar -xzof - --strip-components 1
+
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    wget -O - "https://github.com/prometheus-community/postgres_exporter/archive/refs/tags/${POSTGRES_EXPORTER_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1; \
     cd cmd/postgres_exporter; \
     exec go mod download
 

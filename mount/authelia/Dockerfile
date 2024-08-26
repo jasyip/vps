@@ -33,14 +33,15 @@ FROM builder-base AS builder
 WORKDIR /usr/local/src/authelia
 
 ARG AUTHELIA_VERSION
-RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    wget -O - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
+RUN wget -O - "https://github.com/authelia/authelia/archive/refs/tags/v${AUTHELIA_VERSION}.tar.gz" | \
       tar -xzof - --strip-components 1 $(printf "authelia-${AUTHELIA_VERSION}/%s " api cmd internal go.mod go.sum); \
     HTML_URL="https://github.com/authelia/authelia/releases/download/v${AUTHELIA_VERSION}/authelia-v${AUTHELIA_VERSION}-public_html.tar.gz"; \
     wget -O - "$HTML_URL" | tee >(tar -C internal/server -xzof -) | \
       sha256sum -c <(wget -O - "${HTML_URL}.sha256" | awk '{print $1 " -"}'); \
     mv -f api/* -t internal/server/public_html/api; \
-    mkdir -p /var/lib/authelia/notifications /app; \
+    mkdir -p /var/lib/authelia/notifications /app;
+
+RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     exec go mod download
 
 ARG CFLAGS
