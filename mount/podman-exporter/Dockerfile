@@ -1,6 +1,7 @@
 ARG GO_BUILDER_VERSION
 FROM golang:${GO_BUILDER_VERSION} AS builder
 
+SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     exec apk add gcc mold libc-dev fortify-headers linux-headers btrfs-progs-dev
@@ -9,9 +10,9 @@ WORKDIR /go/src/exporter
 ARG PODMAN_EXPORTER_VERSION
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
-    apk add gcc mold libc-dev fortify-headers linux-headers btrfs-progs-dev && \
-    wget -qO - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/${PODMAN_EXPORTER_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1 && \
+    apk add gcc mold libc-dev fortify-headers linux-headers btrfs-progs-dev; \
+    wget -O - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/${PODMAN_EXPORTER_VERSION}.tar.gz" | \
+        tar -xzof - --strip-components 1; \
     exec go mod download
 
 ARG CFLAGS

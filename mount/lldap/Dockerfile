@@ -5,27 +5,29 @@ ARG MUSLRUST_VERSION
 ARG DISTROLESS_SUFFIX
 FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
 
+SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
+
 WORKDIR /app
 RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
-    rm -f /etc/apt/apt.conf.d/docker-clean && \
+    rm -f /etc/apt/apt.conf.d/docker-clean; \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > \
-      /etc/apt/apt.conf.d/keep-cache && \
-    apt-get update && \
+      /etc/apt/apt.conf.d/keep-cache; \
+    apt-get update; \
     exec apt-get install -y --no-install-recommends libssl-dev brotli zstd gzip wget
 
 ARG SCCACHE_VERSION
 
-RUN wget -qO - "https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" | \
+RUN wget -O - "https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" | \
       tar -C /usr/local/bin -xzof - --strip-components 1 "sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl/sccache"
 
 COPY sccache.conf /root/.config/sccache/config
 
 ARG LLDAP_VERSION
 RUN --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
-    wget -qO - \
+    wget -O - \
         "https://github.com/lldap/lldap/archive/refs/tags/v${LLDAP_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1 && \
+        tar -xzof - --strip-components 1; \
     echo /*.patch | xargs -n 1 patch -p0 -i
 
 ARG RUSTFLAGS
@@ -36,12 +38,12 @@ RUN --mount=type=cache,target=/var/sccache \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --mount=type=cache,target=/tmp/cargo/wasm-pack \
     RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
-    cargo install --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack --bin wasm-pack wasm-pack && \
-    cargo fetch --color always --locked && \
-    cd app/static && \
-    rustup target add wasm32-unknown-unknown && \
-    xargs -a libraries.txt wget --no-hsts -nv -- && rm libraries.txt && \
-    xargs -a fonts/fonts.txt wget --no-hsts -nv -P fonts -- && rm fonts/fonts.txt && \
+    cargo install --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack --bin wasm-pack wasm-pack; \
+    cargo fetch --color always --locked; \
+    cd app/static; \
+    rustup target add wasm32-unknown-unknown; \
+    xargs -a libraries.txt wget --no-hsts -nv --; rm libraries.txt; \
+    xargs -a fonts/fonts.txt wget --no-hsts -nv -P fonts --; rm fonts/fonts.txt; \
     mkdir /data
 
 RUN --mount=type=cache,target=/var/sccache \
@@ -49,7 +51,7 @@ RUN --mount=type=cache,target=/var/sccache \
     --mount=type=cache,target=/root/.cargo/registry/cache,ro \
     --network=none \
     RUSTC_WRAPPER=sccache cargo build --color always --release --frozen --bins \
-        -p lldap -p lldap_migration_tool -p lldap_set_password && \
+        -p lldap -p lldap_migration_tool -p lldap_set_password; \
     find /app/target/**/release/lldap* ! -name '*.*' -executable -exec \
         install -Dm755 -s -t /app/bin '{}' \+
 
@@ -58,9 +60,9 @@ RUN --mount=type=cache,target=/var/sccache \
     --mount=type=cache,target=/root/.cache/.wasm-pack \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
-    wasm-pack build -t web --release --no-typescript app --color always --frozen --bins && \
-    ( cd app/pkg && rm .gitignore package.json ) && \
-    mv -f app/index_local.html app/index.html && \
+    wasm-pack build -t web --release --no-typescript app --color always --frozen --bins; \
+    ( cd app/pkg; rm .gitignore package.json ); \
+    mv -f app/index_local.html app/index.html; \
     for i in js wasm css html; do \
         find app -type f -name "*.$i" -exec sh -c \
             'brotli -Zf -- "$@" && zstd -9f -- "$@" && gzip -9kf -- "$@"' \

@@ -2,15 +2,19 @@ ARG ALPINE_VERSION
 ARG DISTROLESS_SUFFIX
 FROM alpine:$ALPINE_VERSION AS builder
 
+SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
+
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add moreutils gpg gpg-agent ccache g++ mold make cmake pkgconfig libc-dev fortify-headers patch \
+    apk add gpg gpg-agent \
+        ccache g++ mold make cmake pkgconfig patch \
+        libc-dev fortify-headers \
         flex bison \
         openssl-dev openssl-libs-static \
         boost-dev boost1.84-static \
         cppzmq libzmq-static \
         libsodium-dev libsodium-static \
         zeromq-dev \
-        rapidjson-dev && \
+        rapidjson-dev; \
     find /usr/lib/ccache/bin -type l -exec ln -s \{\} /usr/local/bin \;
 
 COPY ccache.conf /etc/
@@ -26,10 +30,10 @@ ARG LDFLAGS
 ARG LIBEXPAT_VERSION
 WORKDIR /usr/local/src/libexpat
 RUN URL="https://github.com/libexpat/libexpat/releases/download/R_$(echo "$LIBEXPAT_VERSION" | tr . _\
-           )/expat-$LIBEXPAT_VERSION.tar.xz" && \
-    wget -qO - "$URL" | pee 'tar -xJof - --strip-components 1' cat | \
+           )/expat-$LIBEXPAT_VERSION.tar.xz"; \
+    wget -O - "$URL" | tee >(tar -xJof - --strip-components 1) | \
       gpg --assert-signer CB8DE70A90CFBF6C3BF5CC5696262ACFFBD3AEC6 \
-          --lock-never --verify <(wget -qO - "${URL}.asc") - && \
+          --lock-never --verify <(wget -O - "${URL}.asc") -; \
     CFLAGS="$CFLAGS -fno-lto" exec ./configure \
         --prefix=/usr/local \
         --disable-maintainer-mode \
@@ -45,11 +49,11 @@ RUN --mount=type=cache,target=/var/ccache \
     exec mold -run make -j$(nproc) install
 
 ARG LIBUNBOUND_VERSION
-RUN URL="https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION}.tar.gz" && \
-    wget -qO - "$URL" | pee 'tar -xzof - --strip-components 1' \
-      "gpg --assert-signer EDFAA3F2CA4E6EB05681AF8E9F6F1C2D7E045F8D \
-           --lock-never --verify <(wget -qO - '${URL}.asc') -" cat | \
-      sha256sum -c <(wget -qO - "${URL}.sha256" | awk '{print $1 " -"}') && \
+RUN URL="https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION}.tar.gz"; \
+    wget -O - "$URL" | tee >(tar -xzof - --strip-components 1) \
+      >(gpg --assert-signer EDFAA3F2CA4E6EB05681AF8E9F6F1C2D7E045F8D \
+           --lock-never --verify <(wget -O - "${URL}.asc") -) | \
+      sha256sum -c <(wget -O - "${URL}.sha256" | awk '{print $1 " -"}'); \
     CFLAGS="$CFLAGS -fno-lto" exec ./configure \
         --prefix=/usr/local \
         --enable-pie \
@@ -77,16 +81,16 @@ ARG MONEROD_VERSION
 
 RUN --mount=target=/CMakeLists.txt.patch,ro,source=CMakeLists.txt.patch \
     --mount=target=/version-string.patch,ro,source=version-string.patch \
-    wget -qO - "https://downloads.getmonero.org/cli/monero-source-v${MONEROD_VERSION}.tar.bz2" | \
-      pee 'tar -xjof - --strip-components 1' cat | \
-          sha256sum -c <(wget -qO - "https://www.getmonero.org/downloads/hashes.txt" | \
-                          pee "gpg --assert-signer 81AC591FE9C4B65C5806AFC3F0AF4D462A0BDF92 \
-                                   --lock-never --verify" cat | \
-                              awk '$2 ~ /^monero-source.*\.tar\.bz2$/ {print $1 " -"}') && \
-    patch -p1 -i /version-string.patch && \
-    patch -p0 -i /CMakeLists.txt.patch && \
-    mkdir -p /.bitmonero && \
-    export CFLAGS="$CFLAGS -fno-lto" && \
+    wget -O - "https://downloads.getmonero.org/cli/monero-source-v${MONEROD_VERSION}.tar.bz2" | \
+      tee >(tar -xjof - --strip-components 1) | \
+          sha256sum -c <(wget -O - "https://www.getmonero.org/downloads/hashes.txt" | \
+                          tee >(gpg --assert-signer 81AC591FE9C4B65C5806AFC3F0AF4D462A0BDF92 \
+                                   --lock-never --verify) | \
+                              awk '$2 ~ /^monero-source.*\.tar\.bz2$/ {print $1 " -"}'); \
+    patch -p1 -i /version-string.patch; \
+    patch -p0 -i /CMakeLists.txt.patch; \
+    mkdir -p /.bitmonero; \
+    export CFLAGS="$CFLAGS -fno-lto"; \
     CXXFLAGS="$CFLAGS" \
     exec cmake -B build/release \
           -DCMAKE_BUILD_TYPE=None \
@@ -103,7 +107,7 @@ RUN --mount=target=/CMakeLists.txt.patch,ro,source=CMakeLists.txt.patch \
 
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
-    mold -run make -C build/release -j$(nproc) daemon && \
+    mold -run make -C build/release -j$(nproc) daemon; \
     install -m755 -s build/release/bin/monerod -t /usr/local/bin/
 
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
