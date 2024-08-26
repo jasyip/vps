@@ -1,13 +1,11 @@
-// #define _GNU_SOURCE
-
-
-#include <ctype.h>    // for isgraph
-#include <stdbool.h>  // for bool, false, true
-#include <stdio.h>    // for size_t, perror, fputs, NULL, fclose, fopen, get...
-#include <stdlib.h>   // for free, getenv, malloc
-#include <string.h>   // for strlen, memcpy, strncmp, strndup
-#include <unistd.h>   // for NULL, execlp, ssize_t
-
+#include <ctype.h>      // for isgraph
+#include <stdbool.h>    // for bool
+#include <stdio.h>      // for perror, size_t, NULL, fputs, stderr, fclose
+#include <stdlib.h>     // for exit, free, getenv, malloc, WEXITSTATUS, WIFE...
+#include <string.h>     // for strlen, memcpy, strncmp, strndup
+#include <sys/types.h>  // for ssize_t
+#include <sys/wait.h>   // for waitpid
+#include <unistd.h>     // for execlp, fork
 
 
 #define ENV_NS "X_AUTHELIA_HEALTHCHECK"
@@ -19,9 +17,8 @@ char const *defaults[] = {NULL, "http", "localhost", "9091", NULL};
 #define NUM_ENV (sizeof(envs) / sizeof(envs[0]))
 
 
-int main(int argc, char* [])
+int main(int argc, char* _[])
 {
-      int stage_successes = 0;
       if (argc > 1) {
             fputs("Should be run without arguments", stderr);
             goto exit;
@@ -66,8 +63,6 @@ int main(int argc, char* [])
             }
       }
 
-      ++stage_successes;
-
 close_f:
       if (fclose(f)) {
             fputs("Couldn't close healthcheck env file\n", stderr);
@@ -85,7 +80,6 @@ close_f:
       }
 
       if (!vals[0]) {
-            ++stage_successes;
             goto exit;
       }
 
@@ -118,11 +112,25 @@ close_f:
       }
       *cur = '\0';
       fflush(stderr);
-      execlp("wget",
-             "wget", "-q", "--tries", "1", "--spider", c, NULL);
-      perror("Error executing wget");
 
+      int const pid = fork();
+      if (pid == -1) {
+            perror("Error forking");
+            goto exit;
+      }
+      if (!pid) {
+            execlp("wget",
+                   "wget", "-q", "--tries", "1", "--spider", c, NULL);
+            perror("Error executing wget");
+            goto exit;
+      }
+      int wstatus;
+      if (waitpid(pid, &wstatus, 0) == -1) {
+            perror("Error waiting for child wget process");
+            goto exit;
+      }
+      exit((bool)wstatus);
 
 exit:
-      return stage_successes < 3;
+      return 1;
 }
