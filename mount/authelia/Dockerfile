@@ -25,7 +25,7 @@ RUN --mount=type=cache,target=/var/ccache \
     --mount=target=healthcheck.c,source=healthcheck.c \
     --network=none \
     mold -run make busybox; make install; \
-    exec cc $CFLAGS -s -static-pie -o /healthcheck healthcheck.c
+    exec cc $CFLAGS $LDFLAGS -s -static-pie -o /healthcheck healthcheck.c
 
 
 FROM builder-base AS builder

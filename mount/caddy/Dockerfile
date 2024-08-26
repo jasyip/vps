@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/var/ccache \
     --mount=target=entrypoint.c,source=entrypoint.c \
     --network=none \
     mold -run make busybox; make install; \
-    exec cc $CFLAGS -s -static-pie -o /entrypoint entrypoint.c
+    exec cc $CFLAGS $LDFLAGS -s -static-pie -o /entrypoint entrypoint.c
 
 FROM builder-base AS builder
 
