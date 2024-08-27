@@ -90,4 +90,4 @@ CMD        [ "--config.file=/etc/prometheus/prometheus.yml", \
              "--web.console.templates=/usr/share/prometheus/consoles", \
              "--enable-feature=memory-snapshot-on-shutdown" ]
 
-HEALTHCHECK CMD wget-wrap -q --spider localhost:9090/-/healthy
+HEALTHCHECK CMD ["wget-wrap", "-q", "--spider", "localhost:9090/-/healthy"]
