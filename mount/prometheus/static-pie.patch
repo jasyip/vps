@@ -1,0 +1,40 @@
+---
++++ .promu.yml
+@@ -1,10 +1,9 @@
+ go:
+-    # Whenever the Go version is updated here,
+-    # .github/workflows should also be updated.
+-    version: 1.22
++    cgo: true
+ repository:
+     path: github.com/prometheus/prometheus
+ build:
++    static: false
+     binaries:
+         - name: prometheus
+           path: ./cmd/prometheus
+@@ -12,18 +11,23 @@ build:
+           path: ./cmd/promtool
+     tags:
+         all:
+-            - netgo
+             - builtinassets
+             - stringlabels
+         windows:
+             - builtinassets
+             - stringlabels
++    flags: -buildmode=pie -trimpath
+     ldflags: |
++        -s
++        -w
++        -linkmode=external
+         -X github.com/prometheus/common/version.Version={{.Version}}
+         -X github.com/prometheus/common/version.Revision={{.Revision}}
+         -X github.com/prometheus/common/version.Branch={{.Branch}}
+         -X github.com/prometheus/common/version.BuildUser={{user}}@{{host}}
+         -X github.com/prometheus/common/version.BuildDate={{date "20060102-15:04:05"}}
++    extldflags:
++        - -static-pie
+ tarball:
+     # Whenever there are new files to include in the tarball,
+     # remember to make sure the new files will be generated after `make build`.

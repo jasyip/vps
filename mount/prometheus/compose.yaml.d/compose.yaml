@@ -7,6 +7,11 @@ services:
       context: ..
       args:
         PROMETHEUS_VERSION: "$VERSION_PROMETHEUS"
+        BUSYBOX_VERSION: "$VERSION_BUILDER_BUSYBOX"
+        GO_BUILDER_VERSION: "${VERSION_BUILDER_GO}-alpine${VERSION_BUILDER_ALPINE}"
+        DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
+        CFLAGS: "$CFLAGS"
+        LDFLAGS: "$LDFLAGS"
       tags:
         - "${COMPOSE_PROJECT_NAME}/prometheus:${VERSION_PROMETHEUS}"
     volumes:
