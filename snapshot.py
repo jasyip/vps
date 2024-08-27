@@ -19,15 +19,14 @@ PathLike: Final[TypeAlias] = os.PathLike | str
 QEMU_IMG: Final[str] = "/usr/bin/qemu-img"
 
 
-def _disable_cow(dest: PathLike) -> bool:
+def _disable_cow(dest: PathLike) -> None:
     dest = Path(dest)
-    if not dest.exists():
-        dest.touch()
-        process: Final = subprocess.run(
-            ("chattr", "+C", str(dest)), check=True
-        )
-        return process.returncode == 0
-    return False
+    if dest.exists():
+        raise OSError(f"{dest=!s} already exists")
+    dest.touch()
+    process: Final = subprocess.run(
+        ("chattr", "+C", str(dest)), check=True
+    )
 
 
 def _qemu_img(args: Iterable[str]) -> subprocess.CompletedProcess:
@@ -36,32 +35,41 @@ def _qemu_img(args: Iterable[str]) -> subprocess.CompletedProcess:
 
 
 def _merge_snapshot(
-    source: PathLike, dest: PathLike, *, source_fmt: str = "qcow2", dest_fmt: str
+    source: PathLike, dest: PathLike, *, source_fmt: str = "qcow2", dest_fmt: str, overwrite: bool
 ) -> None:
-    _disable_cow(dest)
 
-    _qemu_img((
-        "convert",
-        "-f",
-        source_fmt,
-        "-O",
-        dest_fmt,
-        str(source),
-        str(dest),
-    ))
+    try:
+        _disable_cow(dest)
 
+        _qemu_img((
+            "convert",
+            "-f",
+            source_fmt,
+            "-O",
+            dest_fmt,
+            str(source),
+            str(dest),
+        ))
+    except BaseException as e:
+        if overwrite:
+            os.remove(dest)
+        raise e
 
 def _create_snapshot(source: PathLike, dest: PathLike, source_fmt: str = "raw") -> None:
-    _disable_cow(dest)
+    try:
+        _disable_cow(dest)
 
-    _qemu_img((
-        "create",
-        "-o",
-        f"backing_file={source},backing_fmt={source_fmt}",
-        "-f",
-        "qcow2",
-        str(dest),
-    ))
+        _qemu_img((
+            "create",
+            "-o",
+            f"backing_file={source},backing_fmt={source_fmt}",
+            "-f",
+            "qcow2",
+            str(dest),
+        ))
+    except BaseException as e:
+        os.remove(dest)
+        raise e
 
 
 @total_ordering
@@ -150,13 +158,16 @@ def merge_snapshots(backing: PathLike, **kwargs) -> Optional[Path]:
         if not merge_output_path.exists():
             break
 
+    overwrite: Final = bool(kwargs.pop("overwrite"))
+
     _merge_snapshot(
         latest_snapshot.path,
         merge_output_path,
         dest_fmt=backing.suffix.removeprefix("."),
+        overwrite=overwrite,
     )
 
-    if kwargs.pop("overwrite"):
+    if overwrite:
         shutil.move(merge_output_path, backing)
         snapshot: _Snapshot
         for snapshot in _get_all(backing):
