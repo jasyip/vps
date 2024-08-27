@@ -74,5 +74,5 @@ ENTRYPOINT ["/app/authelia"]
 EXPOSE 9959
 ENV X_AUTHELIA_CONFIG="/etc/authelia.yml"
 ENV X_AUTHELIA_HEALTHCHECK=1
-HEALTHCHECK --interval=30s --timeout=3s --start-period=1m CMD /app/healthcheck
+HEALTHCHECK --interval=30s --timeout=3s --start-period=1m CMD ["/app/healthcheck"]
 VOLUME /var/lib/authelia/notifications
