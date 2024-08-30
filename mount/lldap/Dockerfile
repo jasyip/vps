@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >| \
       /etc/apt/apt.conf.d/keep-cache; \
     apt-get update; \
-    exec apt-get install -y --no-install-recommends libssl-dev brotli zstd gzip wget
+    exec apt-get install -y --no-install-recommends libssl-dev wget brotli zstd pigz
 
 ARG SCCACHE_VERSION
 
@@ -65,7 +65,7 @@ RUN --mount=type=cache,target=/var/sccache \
     mv -f app/index_local.html app/index.html; \
     for i in js wasm css html; do \
         find app -type f -name "*.$i" -exec sh -c \
-            'brotli -Zf -- "$@" && zstd -9f -- "$@" && gzip -9kf -- "$@"' \
+            'brotli -Zf -- "$@" && zstdmt -19 -f -- "$@" && pigz -9kf -- "$@"' \
             sh \{\} \+ || exit; \
     done
 
