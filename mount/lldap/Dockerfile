@@ -5,7 +5,7 @@ ARG MUSLRUST_VERSION
 ARG DISTROLESS_SUFFIX
 FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
 
-SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
+SHELL ["bash", "-eCuxo", "pipefail", "-c"]
 
 WORKDIR /app
 RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
