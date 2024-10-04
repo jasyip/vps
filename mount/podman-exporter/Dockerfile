@@ -10,7 +10,7 @@ WORKDIR /go/src/exporter
 ARG PODMAN_EXPORTER_VERSION
 
 RUN wget -O - "https://github.com/containers/prometheus-podman-exporter/archive/refs/tags/v${PODMAN_EXPORTER_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1
+      tar -xzof - --strip-components 1 $(printf "prometheus-podman-exporter-${PODMAN_EXPORTER_VERSION}/%s " cmd collector exporter vendor pdcs go.mod go.sum main.go)
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     exec go mod download

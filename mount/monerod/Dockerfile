@@ -31,7 +31,7 @@ ARG LIBEXPAT_VERSION
 WORKDIR /usr/local/src/libexpat
 RUN URL="https://github.com/libexpat/libexpat/releases/download/R_$(echo "$LIBEXPAT_VERSION" | tr . _\
            )/expat-$LIBEXPAT_VERSION.tar.xz"; \
-    wget -O - "$URL" | tee >(tar -xJof - --strip-components 1) | \
+    wget -O - "$URL" | tee >(tar -xJo --strip-components 1 $(printf "--exclude expat-${LIBEXPAT_VERSION}/%s " fuzz m4 win32)) | \
       gpg --assert-signer CB8DE70A90CFBF6C3BF5CC5696262ACFFBD3AEC6 \
           --lock-never --verify <(wget -O - "${URL}.asc") -; \
     CFLAGS="$CFLAGS -fno-lto" exec ./configure \
@@ -51,7 +51,7 @@ RUN --mount=type=cache,target=/var/ccache \
 
 ARG LIBUNBOUND_VERSION
 RUN URL="https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION}.tar.gz"; \
-    wget -O - "$URL" | tee >(tar -xzof - --strip-components 1) \
+    wget -O - "$URL" | tee >(tar -xzo --strip-components 1 $(printf "--exclude unbound-${LIBUNBOUND_VERSION}/%s " 'test*' winrc)) \
       >(gpg --assert-signer EDFAA3F2CA4E6EB05681AF8E9F6F1C2D7E045F8D \
            --lock-never --verify <(wget -O - "${URL}.asc") -) | \
       sha256sum -c <(wget -O - "${URL}.sha256" | awk '{print $1 " -"}'); \
@@ -84,7 +84,7 @@ ARG MONEROD_VERSION
 RUN --mount=target=/CMakeLists.txt.patch,ro,source=CMakeLists.txt.patch \
     --mount=target=/version-string.patch,ro,source=version-string.patch \
     wget -O - "https://downloads.getmonero.org/cli/monero-source-v${MONEROD_VERSION}.tar.bz2" | \
-      tee >(tar -xjof - --strip-components 1) | \
+      tee >(tar -xjo --strip-components 1 $(printf "monero-source-v${MONEROD_VERSION}/%s " CMakeLists.txt Makefile contrib cmake external src translations)) | \
           sha256sum -c <(wget -O - "https://www.getmonero.org/downloads/hashes.txt" | \
                           tee >(gpg --assert-signer 81AC591FE9C4B65C5806AFC3F0AF4D462A0BDF92 \
                                    --lock-never --verify) | \

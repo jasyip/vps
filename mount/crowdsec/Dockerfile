@@ -33,7 +33,7 @@ WORKDIR /usr/local/src/yq
 
 ARG YQ_VERSION
 RUN wget -O - "https://github.com/mikefarah/yq/archive/refs/tags/v${YQ_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1
+      tar -xzof - --strip-components 1 $(printf "yq-$YQ_VERSION/%s " yq.go cmd pkg go.mod go.sum)
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     exec go mod download
@@ -53,7 +53,7 @@ FROM builder-base AS builder
 ARG RE2_VERSION
 WORKDIR /usr/local/src/re2
 RUN wget -O - "https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1
+      tar -xzof - --strip-components 1 --exclude doc
 
 ARG CFLAGS
 ARG LDFLAGS
@@ -66,7 +66,9 @@ WORKDIR /usr/local/src/crowdsec
 
 ARG CROWDSEC_VERSION
 RUN wget -O - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/v${CROWDSEC_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1
+      tar -xzof - --strip-components 1 $(printf "crowdsec-$CROWDSEC_VERSION/%s " \
+                                         Makefile cmd config go.mod go.sum mk pkg \
+                                         docker/config.yaml scripts wizard.sh)
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     exec go mod download
