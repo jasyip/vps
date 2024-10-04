@@ -7,28 +7,23 @@ FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
 
 SHELL ["bash", "-eCuxo", "pipefail", "-c"]
 
-WORKDIR /app
 RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     --mount=type=cache,target=/var/cache/apt,sharing=locked \
     rm -f /etc/apt/apt.conf.d/docker-clean; \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >| \
       /etc/apt/apt.conf.d/keep-cache; \
     apt-get update; \
-    exec apt-get install -y --no-install-recommends libssl-dev wget brotli zstd pigz
+    exec apt-get install -y --no-install-recommends wget brotli zstd pigz
 
-ARG SCCACHE_VERSION
-
-RUN wget -O - "https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" | \
-      tar -C /usr/local/bin -xzof - --strip-components 1 "sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl/sccache"
-
-COPY sccache.conf /root/.config/sccache/config
-
+WORKDIR /app
 ARG LLDAP_VERSION
 RUN --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
     wget -O - \
         "https://github.com/lldap/lldap/archive/refs/tags/v${LLDAP_VERSION}.tar.gz" | \
         tar -xzof - --strip-components 1; \
     echo /*.patch | xargs -n 1 patch -p0 -i
+
+COPY sccache.conf /root/.config/sccache/config
 
 ARG RUSTFLAGS
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl

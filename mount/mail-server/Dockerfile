@@ -15,12 +15,7 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >| \
       /etc/apt/apt.conf.d/keep-cache; \
     apt-get update; \
-    exec apt-get install -y --no-install-recommends mold protobuf-compiler make wget
-
-ARG SCCACHE_VERSION
-
-RUN wget -O - "https://github.com/mozilla/sccache/releases/download/v$SCCACHE_VERSION/sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl.tar.gz" | \
-      tar -C /usr/local/bin -xzof - --strip-components 1 "sccache-v${SCCACHE_VERSION}-x86_64-unknown-linux-musl/sccache"
+    exec apt-get install -y --no-install-recommends mold wget
 
 COPY sccache.conf /root/.config/sccache/config
 

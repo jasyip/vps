@@ -9,7 +9,6 @@ services:
         MAIL_SERVER_VERSION: "$VERSION_MAIL_SERVER"
         DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
         MUSLRUST_VERSION: "$VERSION_BUILDER_MUSLRUST_NIGHTLY"
-        SCCACHE_VERSION: "$VERSION_BUILDER_SCCACHE"
         ALPINE_VERSION: "$VERSION_BUILDER_ALPINE"
         RUSTFLAGS: "-C link-arg=-fuse-ld=mold -C relocation-model=pie -C strip=symbols -C codegen-units=1 -Zlocation-detail=line -C target-feature=+crt-static"
       tags:
