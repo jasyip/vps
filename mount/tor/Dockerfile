@@ -50,7 +50,7 @@ ARG OPENSSL_VERSION
 WORKDIR /usr/local/src/openssl
 
 RUN URL="https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz"; \
-    wget -O - "$URL" | tee >(tar -xzof - --strip-components 1) \
+    wget -O - "$URL" | tee >(tar -xzo --strip-components 1 $(printf "--exclude openssl-${OPENSSL_VERSION}/%s " test doc/man3 doc/man7)) \
       >(gpg --assert-signer BA5473A2B0587B07FB27CF2D216094DFD0CB81EF \
            --lock-never --verify <(wget -O - "${URL}.asc") -) | \
       sha256sum -c <(wget -O - "${URL}.sha256" | awk '{print $1 " -"}'); \
@@ -94,7 +94,7 @@ WORKDIR /usr/local/src/libevent
 
 RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
     URL="https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-${LIBEVENT_VERSION}-stable.tar.gz"; \
-    wget -O - "$URL" | tee >(tar -xzof - --strip-components 1) | \
+    wget -O - "$URL" | tee >(tar -xzo --strip-components 1 $(printf "--exclude libevent-${LIBEVENT_VERSION}-stable/%s " test configure build-aux m4)) | \
       gpg --assert-signer 2133BC600AB133E1D826D173FE43009C4607B1FB \
           --assert-signer 9E3AC83A27974B84D1B3401DB86086848EF8686D \
           --lock-never --verify <(wget -O - "${URL}.asc") -; \
@@ -127,7 +127,7 @@ RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib 
     --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
     --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
     URL="https://dist.torproject.org/tor-$TOR_VERSION.tar.gz"; \
-    wget -O - "$URL" | tee >(tar -xzof - --strip-components 1) | \
+    wget -O - "$URL" | tee >(tar -xzo --strip-components 1 $(printf "--exclude tor-${TOR_VERSION}/%s " ChangeLog ReleaseNotes)) | \
       sha256sum -c <(wget -O - "${URL}.sha256sum" | \
         tee >(gpg --assert-signer 514102454D0A87DB0767A1EBBE6A0531C18A9179 \
                   --assert-signer B74417EDDF22AC9F9E90F49142E86A2A11F48D36 \

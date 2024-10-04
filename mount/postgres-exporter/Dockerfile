@@ -10,7 +10,7 @@ WORKDIR /go/src/exporter
 ARG POSTGRES_EXPORTER_VERSION
 
 RUN wget -O - "https://github.com/prometheus-community/postgres_exporter/archive/refs/tags/v${POSTGRES_EXPORTER_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1
+        tar -xzo --strip-components 1 $(printf "postgres_exporter-${POSTGRES_EXPORTER_VERSION}/%s " cmd collector config go.mod go.sum)
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     cd cmd/postgres_exporter; \

@@ -10,7 +10,7 @@ WORKDIR /go/src/exporter
 ARG OPENRC_EXPORTER_VERSION
 
 RUN wget -O - "https://git.sr.ht/~tomleb/openrc-exporter/archive/${OPENRC_EXPORTER_VERSION}.tar.gz" | \
-        tar -xzof - --strip-components 1
+        tar -xzof - --strip-components 1 $(printf "openrc-exporter-${OPENRC_EXPORTER_VERSION}/%s " cmd pkg go.mod go.sum)
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     cd cmd/openrc-exporter; \
