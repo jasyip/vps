@@ -65,7 +65,7 @@ WORKDIR /usr/local/src/crowdsec
 
 
 ARG CROWDSEC_VERSION
-RUN wget -O - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/${CROWDSEC_VERSION}.tar.gz" | \
+RUN wget -O - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/v${CROWDSEC_VERSION}.tar.gz" | \
       tar -xzof - --strip-components 1
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
@@ -79,7 +79,7 @@ RUN --mount=type=cache,target=/var/ccache \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
     exec make release DOCKER_BUILD=1 BUILD_STATIC=1 \
          EXTLDFLAGS="-extldflags=-static-pie -linkmode=external" DISABLE_OPTIMIZATION="-buildmode=pie" \
-         BUILD_VERSION="$CROWDSEC_VERSION" PLUGINS="dummy email file http"
+         BUILD_VERSION="v$CROWDSEC_VERSION" PLUGINS="dummy email file http"
 
 
 RUN ( cd crowdsec-v*; ./wizard.sh --docker-mode ); \
