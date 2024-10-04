@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
-    exec mold -run go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /openrc-exporter ./cmd/openrc-exporter
+    go build -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -trimpath -buildmode=pie -o /openrc-exporter ./cmd/openrc-exporter
 
 FROM scratch
 

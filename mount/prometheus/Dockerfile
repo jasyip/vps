@@ -24,7 +24,8 @@ RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
 RUN --mount=type=cache,target=/var/ccache \
     --mount=target=wget-wrap.c,source=wget-wrap.c \
     --network=none \
-    mold -run make busybox; make install; \
+    mold -run make -j$(nproc) busybox; \
+    make install; \
     exec cc $CFLAGS $LDFLAGS -s -static-pie -o /wget-wrap wget-wrap.c
 
 FROM builder-base AS builder

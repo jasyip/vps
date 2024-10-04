@@ -26,7 +26,7 @@ RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
 RUN --mount=type=cache,target=/var/ccache \
     --mount=target=entrypoint.c,source=entrypoint.c \
     --network=none \
-    mold -run make busybox; make install; \
+    make -j$(nproc) busybox; make install; \
     exec cc $CFLAGS $LDFLAGS -s -static-pie -o /entrypoint entrypoint.c
 
 FROM builder-base AS builder
@@ -42,7 +42,7 @@ RUN --mount=type=cache,target=/var/ccache \
     XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s -linkmode=external -extldflags=-static-pie' -buildmode=pie -trimpath" \
     XCADDY_SKIP_CLEANUP=0 XCADDY_SUDO=0 \
     CGO_ENABLED=1 CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
-    exec mold -run xcaddy build \
+    exec xcaddy build \
     --with "github.com/hslatman/caddy-crowdsec-bouncer@${CROWDSEC_BOUNCER_VERSION}" \
     --with "github.com/fvbommel/caddy-dns-ip-range@${DNS_IP_RANGE_VERSION}"
 

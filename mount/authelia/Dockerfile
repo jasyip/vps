@@ -24,7 +24,8 @@ RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
 RUN --mount=type=cache,target=/var/ccache \
     --mount=target=healthcheck.c,source=healthcheck.c \
     --network=none \
-    mold -run make busybox; make install; \
+    make -j$(nproc) busybox; \
+    make install; \
     exec cc $CFLAGS $LDFLAGS -s -static-pie -o /healthcheck healthcheck.c
 
 
