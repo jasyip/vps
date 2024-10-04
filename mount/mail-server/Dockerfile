@@ -22,7 +22,7 @@ COPY sccache.conf /root/.config/sccache/config
 ARG MAIL_SERVER_VERSION
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
-    wget -O - "https://github.com/stalwartlabs/mail-server/archive/refs/tags/${MAIL_SERVER_VERSION}.tar.gz" | \
+    wget -O - "https://github.com/stalwartlabs/mail-server/archive/refs/tags/v${MAIL_SERVER_VERSION}.tar.gz" | \
       tar -xzof - --strip-components 1; \
     exec cargo fetch --locked --color=always
 
