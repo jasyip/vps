@@ -37,16 +37,17 @@ RUN URL="https://github.com/libexpat/libexpat/releases/download/R_$(echo "$LIBEX
     CFLAGS="$CFLAGS -fno-lto" exec ./configure \
         --prefix=/usr/local \
         --disable-maintainer-mode \
+        --disable-dependency-tracking \
         --disable-shared \
         --enable-static \
         --without-examples \
-        --with-pic \
         --without-tests \
         --without-docbook
 
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
-    exec mold -run make -j$(nproc) install
+    make -j$(nproc); \
+    make install
 
 ARG LIBUNBOUND_VERSION
 RUN URL="https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION}.tar.gz"; \
@@ -72,7 +73,8 @@ RUN URL="https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION
 
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
-    exec mold -run make -j$(nproc) install
+    make -j$(nproc) lib; \
+    make install-lib
 
 
 WORKDIR /usr/local/src/monerod

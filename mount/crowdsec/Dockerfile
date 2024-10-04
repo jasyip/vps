@@ -25,7 +25,7 @@ RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
 
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
-    mold -run make busybox; make install
+    make -j$(nproc) busybox; make install
 
 FROM builder-base AS builder-yq
 
@@ -46,7 +46,7 @@ RUN --mount=type=cache,target=/var/ccache \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
-    exec mold -run go build -buildmode=pie -trimpath -ldflags="-s -w -linkmode=external -extldflags=-static-pie" .
+    exec go build -buildmode=pie -trimpath -ldflags="-s -w -linkmode=external -extldflags=-static-pie" .
 
 FROM builder-base AS builder
 
@@ -59,7 +59,7 @@ ARG CFLAGS
 ARG LDFLAGS
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
-    exec mold -run make CXXFLAGS="$CFLAGS" static-install
+    CXXFLAGS="$CFLAGS" exec make static-install
 
 WORKDIR /usr/local/src/crowdsec
 
@@ -77,7 +77,7 @@ RUN --mount=type=cache,target=/var/ccache \
     --network=none \
     export CFLAGS="$CFLAGS -D_LARGEFILE64_SOURCE"; \
     CGO_CFLAGS="$CFLAGS" CGO_CXXFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
-    exec mold -run make release DOCKER_BUILD=1 BUILD_STATIC=1 \
+    exec make release DOCKER_BUILD=1 BUILD_STATIC=1 \
          EXTLDFLAGS="-extldflags=-static-pie -linkmode=external" DISABLE_OPTIMIZATION="-buildmode=pie" \
          BUILD_VERSION="$CROWDSEC_VERSION" PLUGINS="dummy email file http"
 

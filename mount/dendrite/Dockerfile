@@ -8,7 +8,7 @@ FROM golang:${GO_BUILDER_VERSION} AS builder
 SHELL ["/bin/sh", "-eCuxo", "pipefail", "-c"]
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
-    apk add gcc libc-dev mold fortify-headers
+    exec apk add gcc libc-dev mold fortify-headers
 
 WORKDIR /usr/local/src/dendrite
 ARG DENDRITE_VERSION

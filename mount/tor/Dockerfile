@@ -79,7 +79,8 @@ RUN URL="https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_
 
 RUN --mount=type=cache,target=/var/ccache \
     --network=none \
-    exec mold -run make install_dev
+    make -j$(nproc) build_libs; \
+    make install_dev
 
 
 FROM builder-base AS builder-libevent
@@ -143,6 +144,7 @@ RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib 
         --disable-manpage --disable-html-manual --disable-asciidoc \
         --sysconfdir=/etc \
         --localstatedir=/var \
+        --disable-dependency-tracking \
         --enable-static-tor \
         --with-zlib-dir=zlib/lib \
         --with-libevent-dir=libevent/lib \
