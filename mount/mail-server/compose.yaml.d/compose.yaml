@@ -10,7 +10,7 @@ services:
         DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
         MUSLRUST_VERSION: "$VERSION_BUILDER_MUSLRUST"
         ALPINE_VERSION: "$VERSION_BUILDER_ALPINE"
-        RUSTFLAGS: "-C link-arg=-fuse-ld=mold -C relocation-model=pie -C strip=symbols -C codegen-units=1 -C target-feature=+crt-static"
+        RUSTFLAGS: "$RUSTFLAGS"
       tags:
         - "${COMPOSE_PROJECT_NAME}/mail-server:${VERSION_MAIL_SERVER}"
     environment:
