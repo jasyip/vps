@@ -32,9 +32,9 @@ FROM builder-base AS builder
 ARG PROMETHEUS_VERSION
 WORKDIR /usr/local/src/prometheus
 
-RUN --mount=target=/busybox-compat.patch,ro,source=busybox-compat.patch \
-    --mount=target=/pre-built.patch,ro,source=pre-built.patch \
-    --mount=target=/static-pie.patch,ro,source=static-pie.patch \
+RUN --mount=target=/busybox-compat.patch,source=busybox-compat.patch \
+    --mount=target=/pre-built.patch,source=pre-built.patch \
+    --mount=target=/static-pie.patch,source=static-pie.patch \
     wget -O - "https://github.com/prometheus/prometheus/archive/refs/tags/v${PROMETHEUS_VERSION}.tar.gz" | \
       tar -xzof - --strip-components 1; \
     BASE_URL="https://github.com/prometheus/prometheus/releases/download/v${PROMETHEUS_VERSION}"; \

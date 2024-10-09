@@ -81,8 +81,8 @@ WORKDIR /usr/local/src/monerod
 
 ARG MONEROD_VERSION
 
-RUN --mount=target=/CMakeLists.txt.patch,ro,source=CMakeLists.txt.patch \
-    --mount=target=/version-string.patch,ro,source=version-string.patch \
+RUN --mount=target=/CMakeLists.txt.patch,source=CMakeLists.txt.patch \
+    --mount=target=/version-string.patch,source=version-string.patch \
     wget -O - "https://downloads.getmonero.org/cli/monero-source-v${MONEROD_VERSION}.tar.bz2" | \
       tee >(tar -xjo --strip-components 1 $(printf "monero-source-v${MONEROD_VERSION}/%s " CMakeLists.txt Makefile contrib cmake external src translations)) | \
           sha256sum -c <(wget -O - "https://www.getmonero.org/downloads/hashes.txt" | \

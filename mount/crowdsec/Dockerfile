@@ -19,8 +19,8 @@ ARG BUSYBOX_VERSION
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=target=busybox-setup.sh,ro,source=busybox-setup.sh \
-    --mount=target=busybox-config.sh,ro,source=busybox-config.sh \
+RUN --mount=target=busybox-setup.sh,source=busybox-setup.sh \
+    --mount=target=busybox-config.sh,source=busybox-config.sh \
     . busybox-setup.sh
 
 RUN --mount=type=cache,target=/var/ccache \

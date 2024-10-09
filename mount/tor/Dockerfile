@@ -92,7 +92,7 @@ ARG LDFLAGS
 ARG LIBEVENT_VERSION
 WORKDIR /usr/local/src/libevent
 
-RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
+RUN --mount=target=openssl,source=/usr/local/src/openssl/install,from=builder-openssl \
     URL="https://github.com/libevent/libevent/releases/download/release-${LIBEVENT_VERSION}-stable/libevent-${LIBEVENT_VERSION}-stable.tar.gz"; \
     wget -O - "$URL" | tee >(tar -xzo --strip-components 1 $(printf "--exclude libevent-${LIBEVENT_VERSION}-stable/%s " test configure build-aux m4)) | \
       gpg --assert-signer 2133BC600AB133E1D826D173FE43009C4607B1FB \
@@ -108,7 +108,7 @@ RUN --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder
         --with-pic
 
 RUN --mount=type=cache,target=/var/ccache \
-    --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
+    --mount=target=openssl,source=/usr/local/src/openssl/install,from=builder-openssl \
     --network=none \
     exec mold -run make -j$(nproc) install
 
@@ -123,9 +123,9 @@ ARG LDFLAGS
 ARG TOR_VERSION
 WORKDIR /usr/local/src/tor
 
-RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib \
-    --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
-    --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
+RUN --mount=target=zlib,source=/usr/local/src/zlib/install,from=builder-zlib \
+    --mount=target=libevent,source=/usr/local/src/libevent/install,from=builder-libevent \
+    --mount=target=openssl,source=/usr/local/src/openssl/install,from=builder-openssl \
     URL="https://dist.torproject.org/tor-$TOR_VERSION.tar.gz"; \
     wget -O - "$URL" | tee >(tar -xzo --strip-components 1 $(printf "--exclude tor-${TOR_VERSION}/%s " ChangeLog ReleaseNotes)) | \
       sha256sum -c <(wget -O - "${URL}.sha256sum" | \
@@ -156,9 +156,9 @@ RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib 
     find -type f -name '*Makefile*' -exec sed -i \
       's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' '{}' \+
 
-RUN --mount=target=zlib,ro,source=/usr/local/src/zlib/install,from=builder-zlib \
-    --mount=target=libevent,ro,source=/usr/local/src/libevent/install,from=builder-libevent \
-    --mount=target=openssl,ro,source=/usr/local/src/openssl/install,from=builder-openssl \
+RUN --mount=target=zlib,source=/usr/local/src/zlib/install,from=builder-zlib \
+    --mount=target=libevent,source=/usr/local/src/libevent/install,from=builder-libevent \
+    --mount=target=openssl,source=/usr/local/src/openssl/install,from=builder-openssl \
     --mount=type=cache,target=/var/ccache \
     --network=none \
     mold -run make -j$(nproc) install; \
