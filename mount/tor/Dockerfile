@@ -34,7 +34,7 @@ RUN URL="https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-
 
 RUN exec ./configure --prefix="$(pwd)/install" --static
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     exec mold -run make -j$(nproc) install
 
@@ -77,7 +77,7 @@ RUN URL="https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_
         no-weak-ssl-ciphers \
         linux-x86_64
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     make -j$(nproc) build_libs; \
     make install_dev
@@ -107,7 +107,7 @@ RUN --mount=target=openssl,source=/usr/local/src/openssl/install,from=builder-op
         --enable-static \
         --with-pic
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=target=openssl,source=/usr/local/src/openssl/install,from=builder-openssl \
     --network=none \
     exec mold -run make -j$(nproc) install
@@ -159,7 +159,7 @@ RUN --mount=target=zlib,source=/usr/local/src/zlib/install,from=builder-zlib \
 RUN --mount=target=zlib,source=/usr/local/src/zlib/install,from=builder-zlib \
     --mount=target=libevent,source=/usr/local/src/libevent/install,from=builder-libevent \
     --mount=target=openssl,source=/usr/local/src/openssl/install,from=builder-openssl \
-    --mount=type=cache,target=/var/ccache \
+    --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     mold -run make -j$(nproc) install; \
     strip install/bin/tor

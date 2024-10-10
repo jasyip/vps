@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     exec cargo fetch --locked --color=always
 
 ARG RUSTFLAGS
-RUN --mount=type=cache,target=/var/sccache \
+RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cargo/registry/cache,ro \
     --network=none \

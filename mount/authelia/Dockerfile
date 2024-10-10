@@ -21,7 +21,7 @@ RUN --mount=target=busybox-setup.sh,source=busybox-setup.sh \
     --mount=target=busybox-config.sh,source=busybox-config.sh \
     . busybox-setup.sh
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=target=healthcheck.c,source=healthcheck.c \
     --network=none \
     make -j$(nproc) busybox; \
@@ -48,7 +48,7 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \

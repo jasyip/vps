@@ -21,7 +21,7 @@ RUN --mount=target=busybox-setup.sh,source=busybox-setup.sh \
     --mount=target=busybox-config.sh,source=busybox-config.sh \
     . busybox-setup.sh
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=target=wget-wrap.c,source=wget-wrap.c \
     --network=none \
     mold -run make -j$(nproc) busybox; \

@@ -29,7 +29,7 @@ ARG RUSTFLAGS
 ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 # Cannot cache build target due to hard link requirements by rustup
 # unfortunately, so must 
-RUN --mount=type=cache,target=/var/sccache \
+RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --mount=type=cache,target=/tmp/cargo/wasm-pack \
     RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/var/sccache \
     xargs -a fonts/fonts.txt wget --no-hsts -nv -P fonts --; rm fonts/fonts.txt; \
     mkdir /data
 
-RUN --mount=type=cache,target=/var/sccache \
+RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cargo/registry/cache,ro \
     --network=none \
@@ -50,7 +50,7 @@ RUN --mount=type=cache,target=/var/sccache \
     find /app/target/**/release/lldap* ! -name '*.*' -executable -exec \
         install -Dm755 -s -t /app/bin '{}' \+
 
-RUN --mount=type=cache,target=/var/sccache \
+RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cache/.wasm-pack \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \

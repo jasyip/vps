@@ -44,7 +44,7 @@ RUN URL="https://github.com/libexpat/libexpat/releases/download/R_$(echo "$LIBEX
         --without-tests \
         --without-docbook
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     make -j$(nproc); \
     make install
@@ -71,7 +71,7 @@ RUN URL="https://www.nlnetlabs.nl/downloads/unbound/unbound-${LIBUNBOUND_VERSION
         --with-libunbound-only \
         --disable-flto
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     make -j$(nproc) lib; \
     make install-lib
@@ -107,7 +107,7 @@ RUN --mount=target=/CMakeLists.txt.patch,source=CMakeLists.txt.patch \
           -DUSE_READLINE=OFF
 
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     mold -run make -C build/release -j$(nproc) daemon; \
     install -m755 -s build/release/bin/monerod -t /usr/local/bin/
