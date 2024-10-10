@@ -23,7 +23,7 @@ RUN --mount=target=busybox-setup.sh,source=busybox-setup.sh \
     --mount=target=busybox-config.sh,source=busybox-config.sh \
     . busybox-setup.sh
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     make -j$(nproc) busybox; make install
 
@@ -41,7 +41,7 @@ RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \
@@ -57,7 +57,7 @@ RUN wget -O - "https://github.com/google/re2/archive/refs/tags/${RE2_VERSION}.ta
 
 ARG CFLAGS
 ARG LDFLAGS
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
     CXXFLAGS="$CFLAGS" exec make static-install
 
@@ -73,7 +73,7 @@ RUN wget -O - "https://github.com/crowdsecurity/crowdsec/archive/refs/tags/v${CR
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     exec go mod download
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=type=cache,target=/go/pkg/mod,ro \
     --mount=type=cache,target=/root/.cache/go-build \
     --network=none \

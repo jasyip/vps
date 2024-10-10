@@ -23,7 +23,7 @@ RUN --mount=target=busybox-setup.sh,source=busybox-setup.sh \
     --mount=target=busybox-config.sh,source=busybox-config.sh \
     . busybox-setup.sh
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=target=entrypoint.c,source=entrypoint.c \
     --network=none \
     make -j$(nproc) busybox; make install; \
@@ -36,7 +36,7 @@ ARG DNS_IP_RANGE_VERSION
 ARG CFLAGS
 ARG LDFLAGS
 
-RUN --mount=type=cache,target=/var/ccache \
+RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --mount=type=cache,target=/root/.cache/go-build \
     --mount=type=cache,target=/go/pkg/mod,sharing=locked \
     XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s -linkmode=external -extldflags=-static-pie' -buildmode=pie -trimpath" \
