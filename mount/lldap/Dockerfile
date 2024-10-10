@@ -3,7 +3,7 @@
 
 ARG MUSLRUST_VERSION
 ARG DISTROLESS_SUFFIX
-FROM clux/muslrust:${MUSLRUST_VERSION} AS builder
+FROM clux/muslrust:${MUSLRUST_VERSION} AS builder-base
 
 SHELL ["bash", "-eCuxo", "pipefail", "-c"]
 
@@ -13,7 +13,30 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >| \
       /etc/apt/apt.conf.d/keep-cache; \
     apt-get update; \
-    exec apt-get install -y --no-install-recommends wget brotli zstd pigz
+    exec apt-get install -y --no-install-recommends wget zstd pigz
+
+
+FROM builder-base AS builder-brotli
+
+WORKDIR /app
+ARG RUST_BROTLI_VERSION
+
+RUN wget -O - "https://github.com/dropbox/rust-brotli/archive/refs/tags/${RUST_BROTLI_VERSION}.tar.gz" | \
+      tar -xzo --strip-components 1;
+
+RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
+    exec cargo fetch --color always
+
+ARG RUSTFLAGS
+RUN --mount=type=cache,target=/var/sccache,sharing=locked \
+    --mount=type=cache,target=/app/target \
+    --mount=type=cache,target=/root/.cargo/registry/cache,ro \
+    --network=none \
+    RUSTC_WRAPPER=sccache exec cargo install \
+      --color always --offline --no-track --bin brotli --path .
+
+
+FROM builder-base AS builder
 
 WORKDIR /app
 ARG LLDAP_VERSION
@@ -54,14 +77,15 @@ RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cache/.wasm-pack \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
+    --mount=target=/brotli,source=/root/.cargo/bin/brotli,from=builder-brotli \
     RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
     wasm-pack build -t web --release --no-typescript app --color always --frozen --bins; \
     ( cd app/pkg; rm .gitignore package.json ); \
     mv -f app/index_local.html app/index.html; \
     for i in js wasm css html; do \
         find app -type f -name "*.$i" -exec sh -c \
-            'brotli -Zf -- "$@" && zstdmt -19 -f -- "$@" && pigz -9kf -- "$@"' \
-            sh \{\} \+ || exit; \
+            'zstdmt -19 -f -- "$@" && pigz -9kf -- "$@"' \
+            sh {} \+ -exec /brotli -c -q11 -j$(nproc) {} {}.br \; || exit; \
     done
 
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
