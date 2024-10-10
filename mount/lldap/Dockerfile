@@ -13,7 +13,7 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
     echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' >| \
       /etc/apt/apt.conf.d/keep-cache; \
     apt-get update; \
-    exec apt-get install -y --no-install-recommends wget zstd pigz
+    exec apt-get install -y --no-install-recommends mold wget zstd pigz
 
 
 FROM builder-base AS builder-brotli
@@ -55,8 +55,9 @@ ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --mount=type=cache,target=/tmp/cargo/wasm-pack \
-    RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
-    cargo install --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack --bin wasm-pack wasm-pack; \
+    RUSTC_WRAPPER=sccache cargo install \
+      --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack \
+      --bin wasm-pack wasm-pack; \
     cargo fetch --color always --locked; \
     cd app/static; \
     rustup target add wasm32-unknown-unknown; \
@@ -70,16 +71,16 @@ RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --network=none \
     RUSTC_WRAPPER=sccache cargo build --color always --release --frozen --bins \
         -p lldap -p lldap_migration_tool -p lldap_set_password; \
-    find /app/target/**/release/lldap* ! -name '*.*' -executable -exec \
-        install -Dm755 -s -t /app/bin '{}' \+
+    find /app/target/**/release/lldap* -name '*.d' -prune -o -exec \
+        install -Dt bin '{}' \+
 
 RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/app/target \
     --mount=type=cache,target=/root/.cache/.wasm-pack \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     --mount=target=/brotli,source=/root/.cargo/bin/brotli,from=builder-brotli \
-    RUSTC_WRAPPER=sccache RUSTFLAGS="-C strip=symbols" \
-    wasm-pack build -t web --release --no-typescript app --color always --frozen --bins; \
+    env -u RUSTFLAGS RUSTC_WRAPPER=sccache wasm-pack build \
+      -t web --release --no-typescript app --color always --frozen --bins; \
     ( cd app/pkg; rm .gitignore package.json ); \
     mv -f app/index_local.html app/index.html; \
     for i in js wasm css html; do \
