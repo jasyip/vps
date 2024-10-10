@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/go/pkg/mod,ro \
     --network=none \
     CGO_ENABLED=1 CGO_CFLAGS="$CFLAGS" CGO_LDFLAGS="$LDFLAGS" \
     exec go build -buildmode=pie -trimpath -ldflags="-s -w -linkmode=external -extldflags=-static-pie" -o bin/ \
-      ./cmd/create-account ./cmd/dendrite ./cmd/generate-config ./cmd/generate-keys
+      ./cmd/create-account ./cmd/dendrite
 
 
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
