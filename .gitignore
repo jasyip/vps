@@ -168,3 +168,4 @@ cython_debug/
 /mount/caddy/site/*
 /mount/*/compose.yaml.d/secrets/
 /mount/mail-server/etc/dkim/*
+/mount/mail-server/etc/certs/*
