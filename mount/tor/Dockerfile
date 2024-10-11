@@ -51,38 +51,57 @@ FROM builder-base AS builder-openssl
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     exec apk add perl
 
+WORKDIR /usr/local/src/openssl
 ARG CFLAGS
 ARG LDFLAGS
 ARG OPENSSL_VERSION
-WORKDIR /usr/local/src/openssl
 
 RUN URL="https://github.com/openssl/openssl/releases/download/openssl-${OPENSSL_VERSION}/openssl-${OPENSSL_VERSION}.tar.gz"; \
     wget -O - "$URL" | tee >(tar -xzo --strip-components 1 $(printf "--exclude openssl-${OPENSSL_VERSION}/%s " test doc/man3 doc/man7)) \
       >(gpg --assert-signer BA5473A2B0587B07FB27CF2D216094DFD0CB81EF \
-           --lock-never --verify <(wget -O - "${URL}.asc") -) | \
+            --lock-never --verify <(wget -O - "${URL}.asc") -) | \
       sha256sum -c <(wget -O - "${URL}.sha256" | awk '{print $1 " -"}'); \
     exec ./Configure \
         --prefix="$(pwd)/install" \
-        no-shared \
-        no-dso \
-        enable-pic \
-        threads \
-        no-filenames \
-        no-tests \
-        no-zlib \
+        linux-x86_64 \
+        --libdir=lib \
+        enable-ktls \
         no-async \
+        no-autoalginit \
+        no-autoerrinit \
+        no-cmp \
+        no-cms \
+        no-ct \
         no-comp \
+        no-dgram \
+        no-docs \
+        no-dso \
+        no-ec2m \
+        enable-ec_nistp_64_gcc_128 \
+        no-engine \
+        no-err \
+        no-filenames \
+        no-gost \
+        no-http \
+        no-legacy \
+        no-makedepend \
+        no-multiblock \
+        no-nextprotoneg \
+        no-padlockeng \
+        no-rfc3779 \
+        no-stdio \
+        no-srp \
+        no-srtp \
+        no-ssl-trace \
+        no-static-engine \
+        threads \
+        no-ts \
+        no-ui-console \
         no-idea \
         no-mdc2 \
-        no-rc5 \
-        no-ec2m \
         no-sm2 \
         no-sm4 \
-        no-ssl2 \
-        no-ssl3 \
-        no-seed \
-        no-weak-ssl-ciphers \
-        linux-x86_64
+        no-seed
 
 RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
