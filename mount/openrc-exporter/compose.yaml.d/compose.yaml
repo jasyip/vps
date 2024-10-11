@@ -6,6 +6,7 @@ services:
     build:
       context: ..
       args:
+        OPENRC_VERSION: "$VERSION_BUILDER_OPENRC"
         OPENRC_EXPORTER_VERSION: "$VERSION_OPENRC_EXPORTER"
         GO_BUILDER_VERSION: "${VERSION_BUILDER_GO}-alpine${VERSION_BUILDER_ALPINE}"
         CFLAGS: "$CFLAGS"
