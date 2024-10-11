@@ -20,11 +20,12 @@ RUN --mount=type=cache,target=/var/lib/apt,sharing=locked \
 COPY sccache.conf /root/.config/sccache/config
 
 ARG MAIL_SERVER_VERSION
-RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
 RUN --mount=target=/no_pop3.patch,source=no_pop3.patch \
     wget -O - "https://github.com/stalwartlabs/mail-server/archive/refs/tags/v${MAIL_SERVER_VERSION}.tar.gz" | \
-      tar -xzof - --strip-components 1; \
-    envsubst '$MAIL_SERVER_VERSION' < /no_pop3.patch | patch -p0; \
+      tar -xzo --strip-components 1;  \
+    envsubst '$MAIL_SERVER_VERSION' < /no_pop3.patch | patch -p0
+
+RUN --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
     exec cargo fetch --locked --color=always
 
 ARG RUSTFLAGS
@@ -35,17 +36,19 @@ RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     RUSTC_WRAPPER=sccache cargo build --color=always --release --bins \
         --frozen --no-default-features --features=postgres \
         -p mail-server -p stalwart-cli; \
-    find /app/target/**/release/stalwart-* -executable -exec \
-        install -Dm755 -s -t /app/binaries '{}' \+
+    find /app/target/**/release/stalwart-* -name '*.d' -prune -o -exec \
+        install -Dt /app/bin '{}' \+
+
 
 FROM alpine:${ALPINE_VERSION} AS supplementary
 
 RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
     exec apk add libcap-setcap
 
+
 FROM gcr.io/distroless/static${DISTROLESS_SUFFIX}:nonroot
 
-COPY --from=builder /app/binaries/ /usr/bin/
+COPY --from=builder /app/bin/ /usr/bin/
 
 USER root
 

@@ -49,16 +49,16 @@ RUN --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
 COPY sccache.conf /root/.config/sccache/config
 
 ARG RUSTFLAGS
-ARG CARGO_BUILD_TARGET=x86_64-unknown-linux-musl
 # Cannot cache build target due to hard link requirements by rustup
-# unfortunately, so must 
+# unfortunately, so must deal with no caching
 RUN --mount=type=cache,target=/var/sccache,sharing=locked \
     --mount=type=cache,target=/root/.cargo/registry/cache,sharing=locked \
-    --mount=type=cache,target=/tmp/cargo/wasm-pack \
     RUSTC_WRAPPER=sccache cargo install \
       --color always --locked --no-track --target-dir /tmp/cargo/wasm-pack \
       --bin wasm-pack wasm-pack; \
-    cargo fetch --color always --locked; \
+    exec cargo fetch --color always --locked
+
+RUN --mount=type=cache,target=/tmp/cargo/wasm-pack \
     cd app/static; \
     rustup target add wasm32-unknown-unknown; \
     xargs -a libraries.txt wget --no-hsts -nv --; rm libraries.txt; \
@@ -96,7 +96,7 @@ WORKDIR /app
 COPY --from=builder /app/app/index.html* app/
 COPY --from=builder /app/app/static app/static
 COPY --from=builder /app/app/pkg app/pkg
-COPY --from=builder /app/bin/lldap /app/bin/lldap_migration_tool /app/bin/lldap_set_password ./
+COPY --from=builder /app/bin/ ./
 COPY --from=builder --chown=nonroot:nonroot /data /data
 
 COPY ./lldap_config.toml /data/
