@@ -1,0 +1,144 @@
+SPDX-FileCopyrightText: 2024 Jason Yip <general@jasonyip.slmail.me>
+SPDX-License-Identifier: AGPL-3.0-only
+---
++++ Cargo.lock
+@@ -3669,7 +3669,6 @@
+  "jmap",
+  "jmap_proto",
+  "managesieve",
+- "pop3",
+  "smtp",
+  "store",
+  "tokio",
+@@ -4512,19 +4511,0 @@
+-[[package]]
+-name = "pop3"
+-version = "$MAIL_SERVER_VERSION"
+-dependencies = [
+- "common",
+- "directory",
+- "imap",
+- "jmap",
+- "jmap_proto",
+- "mail-parser",
+- "mail-send",
+- "rustls 0.23.14",
+- "store",
+- "tokio",
+- "tokio-rustls 0.26.0",
+- "trc",
+- "utils",
+-]
+-
+@@ -6476,7 +6456,6 @@
+  "managesieve",
+  "nlp",
+  "num_cpus",
+- "pop3",
+  "rayon",
+  "reqwest 0.12.8",
+  "ring 0.17.8",
+---
++++ Cargo.toml
+@@ -8,7 +8,6 @@
+     "crates/imap-proto",
+     "crates/smtp",
+     "crates/managesieve",
+-    "crates/pop3",
+     "crates/nlp",
+     "crates/store",
+     "crates/directory",
+---
++++ crates/common/src/config/server/listener.rs
+@@ -332,8 +332,6 @@ impl ParseValue for ServerProtocol {
+             Ok(Self::Http)
+         } else if value.eq_ignore_ascii_case("managesieve") {
+             Ok(Self::ManageSieve)
+-        } else if value.eq_ignore_ascii_case("pop3") {
+-            Ok(Self::Pop3)
+         } else {
+             Err(format!("Invalid server protocol type {:?}.", value,))
+         }
+---
++++ crates/common/src/config/server/mod.rs
+@@ -51,7 +51,6 @@ pub enum ServerProtocol {
+     Smtp,
+     Lmtp,
+     Imap,
+-    Pop3,
+     Http,
+     ManageSieve,
+ }
+@@ -63,7 +62,6 @@ impl ServerProtocol {
+             ServerProtocol::Lmtp => "lmtp",
+             ServerProtocol::Imap => "imap",
+             ServerProtocol::Http => "http",
+-            ServerProtocol::Pop3 => "pop3",
+             ServerProtocol::ManageSieve => "managesieve",
+         }
+     }
+---
++++ crates/common/src/listener/listen.rs
+@@ -14,7 +14,7 @@ use proxy_header::io::ProxiedStream;
+ use rustls::crypto::ring::cipher_suite::TLS13_AES_128_GCM_SHA256;
+ use tokio::{net::TcpStream, sync::watch};
+ use tokio_rustls::server::TlsStream;
+-use trc::{EventType, HttpEvent, ImapEvent, ManageSieveEvent, Pop3Event, SmtpEvent};
++use trc::{EventType, HttpEvent, ImapEvent, ManageSieveEvent, SmtpEvent};
+ use utils::{config::Config, UnwrapFailure};
+ 
+ use crate::{
+@@ -103,10 +103,6 @@ impl Listener {
+                         EventType::Imap(ImapEvent::ConnectionStart),
+                         EventType::Imap(ImapEvent::ConnectionEnd),
+                     ),
+-                    ServerProtocol::Pop3 => (
+-                        EventType::Pop3(Pop3Event::ConnectionStart),
+-                        EventType::Pop3(Pop3Event::ConnectionEnd),
+-                    ),
+                     ServerProtocol::Http => (
+                         EventType::Http(HttpEvent::ConnectionStart),
+                         EventType::Http(HttpEvent::ConnectionEnd),
+---
++++ crates/main/Cargo.toml
+@@ -21,7 +21,6 @@
+ jmap_proto = { path = "../jmap-proto" }
+ smtp = { path = "../smtp" }
+ imap = { path = "../imap" }
+-pop3 = { path = "../pop3" }
+ managesieve = { path = "../managesieve" }
+ common = { path = "../common" }
+ directory = { path = "../directory" }
+---
++++ crates/main/src/main.rs
+@@ -11,7 +11,6 @@
+ use imap::core::ImapSessionManager;
+ use jmap::{api::JmapSessionManager, services::gossip::spawn::GossiperBuilder, StartServices};
+ use managesieve::core::ManageSieveSessionManager;
+-use pop3::Pop3SessionManager;
+ use smtp::{core::SmtpSessionManager, StartQueueManager};
+ use trc::Collector;
+ use utils::wait_for_shutdown;
+@@ -72,12 +71,6 @@
+                 acceptor,
+                 shutdown_rx,
+             ),
+-            ServerProtocol::Pop3 => server.spawn(
+-                Pop3SessionManager::new(init.inner.clone()),
+-                init.inner.clone(),
+-                acceptor,
+-                shutdown_rx,
+-            ),
+             ServerProtocol::ManageSieve => server.spawn(
+                 ManageSieveSessionManager::new(init.inner.clone()),
+                 init.inner.clone(),
+---
++++ tests/Cargo.toml
+@@ -24,7 +24,6 @@
+ jmap_proto = { path = "../crates/jmap-proto" }
+ imap = { path = "../crates/imap", features = ["test_mode"] }
+ imap_proto = { path = "../crates/imap-proto" }
+-pop3 = { path = "../crates/pop3", features = ["test_mode"] }
+ smtp = { path = "../crates/smtp", features = ["test_mode"] }
+ common = { path = "../crates/common", features = ["test_mode", "enterprise"] }
+ trc = { path = "../crates/trc" }
