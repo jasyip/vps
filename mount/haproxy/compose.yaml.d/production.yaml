@@ -1,0 +1,5 @@
+services:
+  haproxy:
+    extends:
+      file: ../../compose.yaml.d/compose.yaml
+      service: common

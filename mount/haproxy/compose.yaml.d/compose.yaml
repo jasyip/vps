@@ -1,0 +1,27 @@
+services:
+  haproxy:
+    extends:
+      file: ${MODE}.yaml
+      service: haproxy
+    build:
+      context: ..
+      args:
+        HAPROXY_VERSION: "$VERSION_HAPROXY"
+        ALPINE_VERSION: "$VERSION_BUILDER_ALPINE"
+        LUA_VERSION: "$VERSION_BUILDER_LUA"
+        PCRE2_VERSION: "$VERSION_BUILDER_PCRE2"
+        QUICTLS_VERSION: "$VERSION_BUILDER_QUICTLS"
+        ZLIB_VERSION: "$VERSION_BUILDER_ZLIB"
+        DISTROLESS_SUFFIX: "$VERSION_DISTROLESS_SUFFIX"
+        CFLAGS: "$CFLAGS"
+        LDFLAGS: "$LDFLAGS"
+      tags:
+        - "${COMPOSE_PROJECT_NAME}/haproxy:${VERSION_HAPROXY}"
+    ports:
+      - 18080:18080
+      - 18081:18081
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL

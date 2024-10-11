@@ -8,6 +8,7 @@ include:
   # - crowdsec-firewall-bouncer/compose.yaml.d/compose.yaml
   - dendrite/compose.yaml.d/compose.yaml
   - grafana/compose.yaml.d/compose.yaml
+  - haproxy/compose.yaml.d/compose.yaml
   - lldap/compose.yaml.d/compose.yaml
   - openrc-exporter/compose.yaml.d/compose.yaml
   - podman-exporter/compose.yaml.d/compose.yaml
