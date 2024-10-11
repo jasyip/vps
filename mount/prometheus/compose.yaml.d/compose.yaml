@@ -21,6 +21,8 @@ services:
         target: metrics_password_caddy
       - source: grafana_metrics_password
         target: metrics_password_grafana
+      - source: mail_server_metrics_password
+        target: metrics_password_mail_server
     read_only: true
     security_opt:
       - no-new-privileges:true
@@ -32,6 +34,8 @@ secrets:
     environment: "${MODE}_METRICS_PASSWORD_CADDY"
   grafana_metrics_password:
     environment: "${MODE}_METRICS_PASSWORD_GRAFANA"
+  mail_server_metrics_password:
+    environment: "${MODE}_METRICS_PASSWORD_MAIL_SERVER"
 
 configs:
   prometheus_config:

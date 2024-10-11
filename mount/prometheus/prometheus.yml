@@ -33,6 +33,15 @@ scrape_configs:
       username: prometheus
       password_file: /run/secrets/metrics_password_grafana
 
+  - job_name: mail-server
+    static_configs:
+    - targets:
+      - mail-server:8080
+    metrics_path: /metrics/prometheus
+    basic_auth:
+      username: prometheus
+      password_file: /run/secrets/metrics_password_mail_server
+
   - job_name: node-exporter
     static_configs:
     - targets:

@@ -13,6 +13,13 @@ services:
         RUSTFLAGS: "$RUSTFLAGS"
       tags:
         - "${COMPOSE_PROJECT_NAME}/mail-server:${VERSION_MAIL_SERVER}"
+    ports:
+      - 25:25
+      - 465:465
+      - 993:993
+    secrets:
+      - source: mail_server_metrics_password
+        target: metrics_password
     environment:
       DOMAIN: "$DOMAIN"
       MX_SUBDOMAIN: "$MX_SUBDOMAIN"
@@ -25,10 +32,6 @@ services:
       - type: bind
         source: /run/postgresql
         target: /run/postgresql
-    ports:
-      - 25:25
-      - 465:465
-      - 993:993
     read_only: true
     security_opt:
       - no-new-privileges:true
@@ -40,3 +43,7 @@ services:
 volumes:
   mail_server_data:
     name: ${COMPOSE_PROJECT_NAME}.${MODE}.mail-server.data
+
+secrets:
+  mail_server_metrics_password:
+    environment: "${MODE}_METRICS_PASSWORD_MAIL_SERVER"
