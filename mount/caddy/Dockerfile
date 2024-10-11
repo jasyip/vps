@@ -57,14 +57,14 @@ RUN --mount=target=/lib/libcap.so.2,source=/usr/lib/libcap.so.2,from=builder \
     --mount=target=/lib/ld-musl-x86_64.so.1,source=/lib/ld-musl-x86_64.so.1,from=builder \
     --mount=target=/usr/sbin/busybox,source=/bin/busybox,from=builder \
     --mount=target=/usr/sbin/setcap,source=/usr/sbin/setcap,from=builder \
-     ["busybox", "sh", "-eCuxo", "pipefail", "-c", \
-      "cd /usr/sbin; \
-       busybox ln -s busybox tail; \
-       busybox ln -s busybox tee; \
-       setcap cap_net_bind_service=+ep /usr/bin/caddy; \
-       busybox mkdir -p /var/log/caddy \
-      " \
-     ]
+    ["busybox", "sh", "-eCuxo", "pipefail", "-c", \
+     "cd /usr/sbin; \
+      busybox ln -s busybox tail; \
+      busybox ln -s busybox tee; \
+      setcap cap_net_bind_service=+ep /usr/bin/caddy; \
+      busybox mkdir -p /var/log/caddy \
+     " \
+    ]
 
 COPY mta-sts.txt /run/files/
 COPY Caddyfile /etc/caddy/

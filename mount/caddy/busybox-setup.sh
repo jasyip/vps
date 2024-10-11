@@ -8,7 +8,7 @@ gpg --recv-key C9E9416F76E610DBD09D040F47B70C55ACC9965B
 URL="https://busybox.net/downloads/busybox-${BUSYBOX_VERSION}.tar.bz2"
 wget -qO - "$URL" | tee >(tar -xjof - --strip-components 1) \
                         >(gpg --verify <(wget -qO - "${URL}.sig") -) |
-                        sha256sum -c <(wget -qO - "${URL}.sha256" | awk '{print $1 " -"}')
+                      sha256sum -c <(wget -qO - "${URL}.sha256" | awk '{print $1 " -"}')
 
 
 sed -i 's/\(^\|[^[:alnum:]_-]\)-static\($\|[^[:alnum:]=_-]\)/\1-static-pie\2/' Makefile.flags
