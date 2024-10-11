@@ -43,7 +43,7 @@ RUN --mount=target=/busybox-compat.patch,source=busybox-compat.patch \
       tee >(tar -C web/ui -xzof -) | \
           sha256sum -c <(wget -O - "$BASE_URL/sha256sums.txt" | \
                            awk '$2 ~ /^prometheus-web-ui.*\.tar\.gz$/ {print $1 " -"}'); \
-    echo /*.patch | xargs -n 1 patch -p0 -i && \
+    cat /*.patch | patch -p0 && \
     exec make promu
 
 RUN --mount=type=cache,target=/go/pkg/mod,sharing=locked \

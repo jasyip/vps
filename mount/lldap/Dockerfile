@@ -44,7 +44,7 @@ RUN --mount=target=/Cargo.lock.patch,source=Cargo.lock.patch \
     wget -O - \
         "https://github.com/lldap/lldap/archive/refs/tags/v${LLDAP_VERSION}.tar.gz" | \
         tar -xzo --strip-components 1 --exclude '*/example_configs'; \
-    echo /*.patch | xargs -n 1 patch -p0 -i
+    cat /*.patch | patch -p0
 
 COPY sccache.conf /root/.config/sccache/config
 
