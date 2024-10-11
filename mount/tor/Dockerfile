@@ -13,7 +13,6 @@ RUN --mount=type=cache,target=/var/cache/apk,sharing=locked \
 COPY ccache.conf /etc/
 
 RUN gpg --fetch-keys \
-      "https://madler.net/madler/pgp.html" \
       "https://keys.openpgp.org/vks/v1/by-fingerprint/BA5473A2B0587B07FB27CF2D216094DFD0CB81EF" \
       "https://www.wangafu.net/~nickm/public_key.asc" \
       "https://azat.sh/azatpub.asc" \
@@ -23,20 +22,28 @@ RUN gpg --fetch-keys \
 
 FROM builder-base AS builder-zlib
 
+WORKDIR /usr/local/src/zlib
 ARG CFLAGS
 ARG LDFLAGS
 ARG ZLIB_VERSION
-WORKDIR /usr/local/src/zlib
-RUN URL="https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.xz"; \
-    wget -O - "$URL" | tee >(tar -xJof - --strip-components 1) | \
-      gpg --assert-signer 5ED46A6721D365587791E2AA783FCD8E58BCAFBA \
-          --lock-never --verify <(wget -O - "${URL}.asc") -
-
-RUN exec ./configure --prefix="$(pwd)/install" --static
+RUN wget -O - "https://github.com/zlib-ng/zlib-ng/archive/refs/tags/${ZLIB_VERSION}.tar.gz" | \
+      tar -xzo --strip-components 1 $(printf "--exclude zlib-ng-${ZLIB_VERSION}/%s " doc test); \
+    exec cmake -B build \
+      -DWITH_GTEST=OFF \
+      -DWITH_SANITIZER=OFF \
+      -DZLIB_ENABLE_TESTS=OFF \
+      -DZLIB_COMPAT=ON \
+      -DWITH_RUNTIME_CPU_DETECTION=OFF \
+      -DWITH_NATIVE_INSTRUCTIONS=ON
 
 RUN --mount=type=cache,target=/var/ccache,sharing=locked \
     --network=none \
-    exec mold -run make -j$(nproc) install
+    cd build; \
+    cmake --build . -t zlibstatic; \
+    install -Dm644 libz.a -t /opt/zlib/lib; \
+    install -Dm644 *.h -t /opt/zlib/include; \
+    install -Dm644 zlib.pc -t /opt/zlib/lib/pkgconfig; \
+    find . -iname 'zlib*.cmake' -exec install -Dm644 -t /opt/zlib/lib/cmake/ZLIB '{}' \+
 
 
 FROM builder-base AS builder-openssl
